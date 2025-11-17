@@ -1,0 +1,13 @@
+
+# The following lines were added by compinstall
+
+zstyle ':completion:*' completer _complete _ignored
+zstyle :compinstall filename '/home/xingjian/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+setopt INTERACTIVE_COMMENTS
+alias kvm='virt-manager'
+export EDITOR=vim
+source /opt/clash/script/common.sh && source /opt/clash/script/clashctl.sh && watch_proxy

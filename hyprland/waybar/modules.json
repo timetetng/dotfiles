@@ -1,0 +1,173 @@
+{
+"hyprland/workspaces": {
+        "format": "{icon}",
+        "format-active": " {icon} ",
+        "on-click": "activate"
+    },
+    
+    "power-profiles-daemon": {
+        "format": "{icon}",
+        "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+        "tooltip": true,
+        "format-icons": {
+            "default": "",
+            "performance": "", 
+            "balanced": "",
+            "power-saver": ""
+        }
+    },
+    
+    "pulseaudio": {
+        "format": "{volume}% {icon}",
+        "format-bluetooth": "{volume}% {icon}",
+        "format-bluetooth-muted": " {icon}",
+        "format-muted": "",
+        "format-icons": {
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", ""]
+        },
+        "on-click": "pavucontrol",
+        "scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +5%",
+        "scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -5%"
+    },
+    
+    "tray": {
+        "icon-size": 16,
+        "spacing": 8
+    },
+    
+    "custom/island": {
+        "exec": "$HOME/.config/waybar/scripts/weather.sh",
+        "interval": 600,
+        "format": "{}",
+        "return-type": "json",
+        "tooltip": true,
+        "on-click": "$HOME/.config/waybar/scripts/select_city.sh"
+    },
+    
+    "backlight": {
+        "format": "{percent}% {icon}",
+        "format-icons": ["", "", "", "", "", "", "", "", ""]
+    },
+    
+    "custom/system_stats": {
+        "exec": "$HOME/.config/waybar/scripts/system_stats.sh",
+        "interval": 5,
+        "return-type": "json",
+        "format": "{}",
+        "tooltip": true,
+        "on-click": "$HOME/.config/waybar/scripts/cycle_system_stats.sh",
+        "on-scroll-up": "$HOME/.config/waybar/scripts/cycle_system_stats.sh power",
+        "on-scroll-down": "$HOME/.config/waybar/scripts/cycle_system_stats.sh power"
+    },
+
+    "custom/power": {
+        "format": "⏻ ",
+        "tooltip": false,
+        "menu": "on-click",
+        "menu-file": "$HOME/.config/waybar/power_menu.xml",
+        "menu-actions": {
+            "shutdown": "poweroff",
+            "reboot": "reboot", 
+            "suspend": "systemctl suspend",
+            "hibernate": "systemctl hibernate"
+        }
+    },
+    
+    "custom/ss": {
+        "format": "{}",
+        "exec": "~/.config/waybar/scripts/tools/expand ss-icon",
+        "on-click": "~/.config/waybar/scripts/screenshot_full"
+    },
+    
+    "custom/cycle_wall": {
+        "format": "{}",
+        "exec": "~/.config/waybar/scripts/tools/expand wall",
+        "on-click": "~/.config/waybar/scripts/tools/expand cycle"
+    },
+    
+    "custom/expand": {
+        "on-click": "~/.config/waybar/scripts/expand_toolbar",
+        "format": "{}",
+        "exec": "~/.config/waybar/scripts/tools/expand arrow-icon"
+    },
+    
+    "keyboard-state": {
+        "numlock": true,
+        "capslock": true,
+        "format": "{name} {icon}",
+        "format-icons": {
+            "locked": "",
+            "unlocked": ""
+        }
+    },
+
+    "custom/temperature": {
+        "exec": "$HOME/.config/waybar/scripts/temperature.sh",
+        "interval": 5,
+        "return-type": "json",
+        "format": "{}",
+        "tooltip": true,
+        "on-click": "$HOME/.config/waybar/scripts/cycle_temperature.sh"
+    },
+    
+    "clock": {
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+        "interval": 60,
+        "format": "{:%H:%M}",
+        "max-length": 25
+    },
+    
+    "memory": {
+        "format": "{}% "
+    },
+    
+    "battery": {
+        "states": {
+            "warning": 50,
+            "critical": 20
+        },
+        "format": "{icon}",
+        "format-charging": "",
+        "format-plugged": "",
+        "format-icons": ["", "", "", "", ""]
+    },
+    
+    "battery#bat2": {
+        "bat": "BAT2"
+    },
+    
+    "network": {
+        "format-wifi": " {signal}%",
+        "format-ethernet": "",
+        "tooltip-format": "via {gwaddr} {ifname}",
+        "format-linked": "",
+        "format-disconnected": "⚠️ 无连接",
+        "format-alt": "   "
+    },
+    
+    "custom/media": {
+        "format": "{icon} {}",
+        "return-type": "json",
+        "max-length": 40,
+        "format-icons": {
+            "spotify": "",
+            "default": "🎜"
+        },
+        "escape": true,
+        "exec": "$HOME/.config/waybar/scripts/mediaplayer.py 2> /dev/null"
+    },
+
+    "custom/network": {
+        "exec": "$HOME/.config/waybar/scripts/network.sh",
+        "interval": 5,
+        "return-type": "json",
+        "on-click": "$HOME/.config/waybar/scripts/network_menu_dynamic.sh",
+        "tooltip": true
+    }
+}

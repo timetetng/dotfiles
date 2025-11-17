@@ -1,0 +1,25 @@
+{
+    "layer": "top",
+    "position": "top", 
+    "height": 30,
+    "spacing": 5,
+    "margin-bottom": -11,
+    "modules-left": ["hyprland/workspaces"],
+    "modules-center": ["custom/island"],
+    "modules-right": [
+        "keyboard-state",
+        "custom/ss",
+        "custom/cycle_wall",
+        "custom/expand",
+        "custom/temperature",
+        "custom/system_stats",
+        "pulseaudio",
+        "backlight",
+        "clock",
+        "custom/network",
+        "tray",
+        "custom/power"
+    ],
+    "include":["~/.config/waybar/modules.json"]
+    
+}

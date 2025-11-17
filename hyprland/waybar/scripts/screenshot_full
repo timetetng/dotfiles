@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+
+# 获取当前光标所在的显示器
+FOCUSED_MONITOR=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name')
+
+# 截取当前聚焦的显示器并复制到剪贴板
+grim -o "$FOCUSED_MONITOR" - | wl-copy
+
+notify-send "截图已复制到剪贴板" -a "截图工具"

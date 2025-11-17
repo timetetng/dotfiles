@@ -1,0 +1,39 @@
+# 忽略所有日志文件
+*.log
+# 忽略 Oh My Zsh 框架
+zsh/.oh-my-zsh/
+# 忽略各种备份文件
+*.bak
+*.backup
+*~
+*.swp
+hyprland/hypr/hyprland.conf.backup.*
+kitty/kitty/kitty.conf.bak
+kitty/kitty/kitty.config.backup1117
+theme/fontconfig/fonts.conf.bak
+yazi/yazi/theme.toml.backup
+
+# 忽略整个 waybar 备份目录
+hyprland/waybar/waybar.backup/
+
+# 忽略 fcitx5 缓存
+fcitx5/fcitx5/conf/cached_layouts
+
+# 忽略 hyprland 运行时/状态文件
+hyprland/hypr/store/
+hyprland/hypr/scripts/toolbar_state
+hyprland/waybar/scripts/toolbar_state
+
+# 忽略包含城市信息的用户特定文件
+hyprland/hypr/scripts/tools/weather_city.txt
+hyprland/waybar/scripts/weather_city.txt
+
+# 忽略下载的主题和插件
+# 最好通过文档记录如何安装它们，而不是将它们提交到 git
+kitty/kitty/kitty-themes/
+yazi/yazi/flavors/
+yazi/yazi/plugins/
+
+# 操作系统生成的文件
+.DS_Store
+Thumbs.db
