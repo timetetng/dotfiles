@@ -149,6 +149,13 @@ wifi(){
          return 1 
      fi
      nmcli device wifi list&> /dev/null && nmcli dev wifi connect $arg1
+     local wifi_ok=`nmcli device | grep "已连接" | awk '{print $4}'|| echo "error"`
+     echo $wifi_ok
+     if [ $wifi_ok = $arg1 ];then
+        notify-send "成功切换至 [$arg1] !"
+     else
+         notify-send "切换失败!"
+     fi
  else
      nmcli device
  fi   
@@ -191,3 +198,6 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+# alias eza -> ls 
+alias l='eza -l --icons --git -a'
