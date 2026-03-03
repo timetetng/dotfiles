@@ -1,0 +1,20 @@
+{
+  "custom/pomodoro": {
+    "label": "{text}",
+    "tooltip": "{tooltip}",
+    "icon": {
+      "work": "🍅",
+      "break": "☕",
+      "paused": "⏸️"
+    },
+    "execute": "python3 ~/.config/hyprpanel/scripts/pomodoro.py status",
+    "interval": 1000,
+    "actions": {
+      "onLeftClick": "python3 ~/.config/hyprpanel/scripts/pomodoro.py toggle",
+      "onRightClick": "python3 ~/.config/hyprpanel/scripts/pomodoro.py reset",
+      "onMiddleClick": "python3 ~/.config/hyprpanel/scripts/pomodoro.py set 5 break",
+      "onScrollUp": "python3 ~/.config/hyprpanel/scripts/pomodoro.py change 60",
+      "onScrollDown": "python3 ~/.config/hyprpanel/scripts/pomodoro.py change -60"
+    }
+  }
+}

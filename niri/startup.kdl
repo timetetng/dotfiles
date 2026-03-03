@@ -1,0 +1,18 @@
+// 询问管理员权限功能（身份验证）
+spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
+// 通知程序
+// 输入法
+spawn-at-startup "fcitx5"
+spawn-at-startup "nm-applet"
+spawn-at-startup "blueman-applet"
+spawn-at-startup "swww-daemon"
+// 总览界面背景壁纸的守护进程
+spawn-sh-at-startup "swww-daemon -n overview"
+spawn-at-startup "xwayland-satellite"
+spawn-sh-at-startup "QT_SCALE_FACTOR=0.75 quickshell"
+spawn-sh-at-startup "sleep 2 && swww restore"
+spawn-at-startup "~/.config/niri/scripts/auto-blur.sh"
+
+
+spawn-sh-at-startup "clipse --listen"
+spawn-at-startup "flclash"

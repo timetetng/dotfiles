@@ -1,0 +1,17 @@
+output "eDP-1" {
+    mode "2560x1600"
+    scale 1.6
+    position x=0 y=0
+}
+
+// 屏幕配置 B (也是直接放在最外面)
+output "HDMI-A-1" {
+    mode "1920x1280"
+    scale 1.6
+    position x=1600 y=500
+}
+
+layer-rule{
+    match namespace="swww-daemonoverview"
+     place-within-backdrop true
+}

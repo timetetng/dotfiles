@@ -1,0 +1,103 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "builtin",
+    "source": "arch_small",
+    "padding": {
+      "right": 4,
+      "top": 2,
+      "left": 2
+    },
+    "color": {
+      "1": "magenta",
+      "2": "cyan"
+    }
+  },
+  "display": {
+    "separator": " │ ",
+    "color": "magenta",
+    "size": {
+      "binaryPrefix": "si",
+      "ndigits": 2
+    },
+    "key": {
+      "width": 16 // 核心设置：固定宽度，确保右侧竖线对齐
+    }
+  },
+  "modules": [
+    {
+      "type": "custom",
+      "format": "╭──────────╮" // 技巧：删掉 key，直接在这里加空格对齐
+    },
+    // 用户名 (使用 command 模块获取单独的用户名)
+    {
+      "type": "command",
+      "key": "│  user  ",
+      "text": "whoami"
+    },
+    // 运行时间
+    {
+      "type": "uptime",
+      "key": "│ 󰔚 uptime"
+    },
+    // 发行版
+    {
+      "type": "os",
+      "key": "│  distro"
+    },
+    // 内核
+    {
+      "type": "kernel",
+      "key": "│ ⚙ kernel",
+      "format": "{release}"
+    },
+    // 窗口管理器
+    {
+      "type": "wm",
+      "key": "│  wm    "
+    },
+    // 终端
+    {
+      "type": "terminal",
+      "key": "│  term  "
+    },
+    // Shell
+    {
+      "type": "shell",
+      "key": "│  shell "
+    },
+    // CPU
+    {
+      "type": "editor",
+      "key": "│  Editor"
+    },
+    // 磁盘
+    {
+      "type": "disk",
+      "key": "│ 󰋊 disk  ",
+      "folders": "/",
+      "format": "{size-used} / {size-total}"
+    },
+    // 内存
+    {
+      "type": "memory",
+      "key": "│ 󰍛 memory",
+      "format": "{used} / {total} ({percentage})"
+    },
+    // 中间分隔线
+    {
+      "type": "custom",
+      "format": "├──────────┤"
+    },
+    // 颜色圆点 (使用 colors 模块，并将符号设为圆圈)
+    {
+      "type": "colors",
+      "key": "│  colors",
+      "symbol": "circle"
+    },
+    {
+      "type": "custom",
+      "format": "╰──────────╯"
+    }
+  ]
+}

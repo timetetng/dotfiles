@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# 使用 wofi 或 rofi 显示电源菜单
+CHOICE=$(echo -e "关机\n重启\n休眠\n锁定\n注销" | wofi --dmenu --prompt="电源选项" --width=200 --height=150)
+
+case $CHOICE in
+    "关机")
+        systemctl poweroff
+        ;;
+    "重启")
+        systemctl reboot
+        ;;
+    "休眠")
+        systemctl suspend
+        ;;
+    "锁定")
+        # 根据您的锁屏工具调整
+        swaylock
+        ;;
+    "注销")
+        # 根据您的 Hyprland 配置调整
+        hyprctl dispatch exit
+        ;;
+esac

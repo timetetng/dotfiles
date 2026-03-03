@@ -1,0 +1,17 @@
+/* ##################################
+ * #  Custom Pomodoro Module Styling #
+ * ################################## */
+
+// 只有当你的模块名在 modules.json 里是 "custom/pomodoro" 时，这里才用 "cmodule-pomodoro"
+@include styleModule(
+    'cmodule-pomodoro', 
+    (
+        // 这里配色可以根据你的主题调整，这里用的是常见的 Catppuccin Mocha 配色
+        'text-color': #cdd6f4,           // 文本颜色
+        'icon-color': #fab387,           // 图标颜色 (番茄红/橘色)
+        'icon-background': #313244,      // 图标背景 (Split模式下有效)
+        'label-background': #1e1e2e,     // 文本背景 (Split模式下有效)
+        'inner-spacing': 0.5em,          // 内部间距
+        'icon-size': 1.2em               // 图标大小
+    )
+);
