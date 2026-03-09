@@ -107,6 +107,9 @@ Rectangle {
                     if (root.showLauncher) root.showLauncher = false;
                     else { root.expanded = false; root.showLyrics = false; root.showLauncher = true; }
                 }
+else if (data.indexOf("bilibili") !== -1) {
+    WidgetState.showBiliBarrage = !WidgetState.showBiliBarrage;
+}
             }
         }
         onExited: (code, status) => { restartTimer.start() }

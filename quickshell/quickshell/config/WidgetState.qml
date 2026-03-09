@@ -5,4 +5,5 @@ QtObject {
     property bool networkOpen: false
     property bool audioOpen: false
     property bool notifOpen: false
+    property bool showBiliBarrage: false
 }

@@ -4,8 +4,9 @@
 import Quickshell
 import Quickshell.Wayland
 import qs.Modules.Bar
-
+import "Widget" // 引入 Widget 目录
 ShellRoot {
-    Bar {}
+  Bar {}
+  BiliBarrageWidget {}
 }
 
