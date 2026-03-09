@@ -40,3 +40,6 @@ Thumbs.db
 
 # 壁纸
 hyprland/hypr/wallpapers/
+
+# quickshell Bilibili消息组件cookie
+quickshell/quickshell/config/BiliConfig.qml
