@@ -65,7 +65,7 @@ Mod键=win键。鼠标中键打开歌词。
  <img src="https://raw.githubusercontent.com/Archirithm/picture/main/Pasted image.png" width="500">
 </p>
 
-`Mod+M`打开灵动岛天气
+`Mod+D`打开灵动岛天气
 <p align="center">
  <img src="https://raw.githubusercontent.com/Archirithm/picture/main/Screenshot from 2026-02-01 14-18-07.png" width="500"></p>
 
@@ -78,6 +78,12 @@ Mod键=win键。鼠标中键打开歌词。
 <p align="center">
  <img src="https://raw.githubusercontent.com/Archirithm/picture/main/Screenshot from 2026-02-01 14-35-12.png" width="500">
 </p>
+
+`Mod+T`打开哔哩哔哩直播弹幕
+> 需部署[UniBarrage服务端[(https://github.com/timetetng/UniBarrage)并在其 WebUI 或 `.env` 中配置 Bilibili 的房间号和 Cookies 信息;
+> Quickshell 部分需要复制`config/BiliConfig_example.qml` -> `config/BiliConfig.qml` 并填入相关信息。
+
+
 稍微解释下灵动岛快捷键，例如`Mod+M`打印‘dashboard’到`/tmp/qs_launcher.pipe`管道文件中，quickshell后台收到信息展开灵动岛。/tmp是系统临时文件，阅后即焚，不用担心。
 （现在我觉得这种管道文件的IPC通信效率太低了，经常卡键，后面我得换一个方式实现quickshell和niri之间的通信。）
 
@@ -93,3 +99,4 @@ echo "QT_QPA_PLATFORMTHEME=gtk3" > ~/.config/environment.d/envvars.conf
 mkdir -p ~/.config/environment.d && echo "QT_QPA_PLATFORMTHEME=gtk3" > ~/.config/environment.d/envvars.conf
 ```
 重新读取环境变量即可，这个变量是将qt的主题同步为gtk主题。
+
