@@ -80,7 +80,7 @@ Mod键=win键。鼠标中键打开歌词。
 </p>
 
 `Mod+T`打开哔哩哔哩直播弹幕
-> 需部署[UniBarrage服务端[(https://github.com/timetetng/UniBarrage)并在其 WebUI 或 `.env` 中配置 Bilibili 的房间号和 Cookies 信息;
+> 需部署[UniBarrage服务端](https://github.com/timetetng/UniBarrage)并在其 WebUI 或 `.env` 中配置 Bilibili 的房间号和 Cookies 信息;
 > Quickshell 部分需要复制`config/BiliConfig_example.qml` -> `config/BiliConfig.qml` 并填入相关信息。
 
 
