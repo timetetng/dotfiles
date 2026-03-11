@@ -1,0 +1,12 @@
+/**
+ *
+ * Author : Aditya Shakya (adi1090x)
+ * Github : @adi1090x
+ * 
+ * Fonts
+ *
+ **/
+
+* {
+    font: "Noto Sans CJK SC 12,Maple Mono NF CN 12, JetBrains Mono Nerd Font 12";
+}
