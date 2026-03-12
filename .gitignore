@@ -43,3 +43,6 @@ hyprland/hypr/wallpapers/
 
 # quickshell Bilibili消息组件cookie
 quickshell/quickshell/config/BiliConfig.qml
+
+./scripts/python/.git
+./scripts/python/.venv
