@@ -24,8 +24,9 @@ if [ -z "$ACTIVE_MONITOR" ]; then
 fi
 
 # 2. 随机选择壁纸
-WALLPAPER=$(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" \) | shuf -n 1)
-
+WALLPAPER=$(find -L "$WALLPAPER_DIR" \
+  -path "*/cache-niri-auto-blur-bg" -prune -o \
+  -type f \( -iname "*.jpg" -o -iname "*.png" \) -print | shuf -n 1)
 if [ -z "$WALLPAPER" ]; then
   echo "错误：未找到壁纸文件"
   exit 1
