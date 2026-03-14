@@ -1,42 +1,39 @@
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
-import qs.Services
+import Quickshell.Hyprland
+import qs.Services // 假设 Niri 在这里
 import qs.config
-// import qs.Config // 已不再需要，因为颜色已写死
 
 Rectangle {
     id: root
 
-    // 【修改点 1】 原 Colorscheme.surface 替换为固定深色背景
-    // 你可以修改这里改变整个条的背景色
+    // --- 环境检测逻辑 ---
+    readonly property string desktop: Quickshell.env("XDG_CURRENT_DESKTOP").toLowerCase()
+    readonly property bool isHyprland: desktop.includes("hyprland")
+    readonly property bool isNiri: desktop.includes("niri")
+
+    // 动态选择数据源
+    readonly property var workspaceModel: isHyprland ? Hyprland.workspaces : (isNiri ? Niri.workspaces : [])
+
     color: Colorsheme.background 
-    
     radius: Sizes.cornerRadius
     implicitHeight: Sizes.barHeight
     implicitWidth: layout.width + 20
-
     property Item activeItem: null
 
-    // --- 滑动的高亮块 ---
+    // 滑动高亮块 (保持不变)
     Rectangle {
         id: indicator
-
+        z: 1
         x: layout.x + (root.activeItem ? root.activeItem.x : 0)
         y: layout.y + (root.activeItem ? root.activeItem.y : 0)
-
         width: root.activeItem ? root.activeItem.width : 0
         height: 26
-
         radius: 14
-
-        // 之前修改的高亮色
         color: Colorsheme.on_primary_container
-
         Behavior on x { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
         Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-
-        Behavior on color { ColorAnimation { duration: 200 } }
     }
 
     RowLayout {
@@ -45,42 +42,41 @@ Rectangle {
         spacing: 5
 
         Repeater {
-            model: Niri.workspaces
+            model: root.workspaceModel
 
             delegate: Item {
                 id: delegateRoot
 
-                property bool active: model.isActive
+                // 统一属性映射：将不同 WM 的属性名归一化
+                readonly property bool isActive: isHyprland ? modelData.active : model.isActive
+                readonly property var workspaceId: isHyprland ? modelData.id : model.idx
 
-                implicitWidth: active ? (numText.implicitWidth + 24) : (numText.implicitWidth + 12)
+                implicitWidth: isActive ? (numText.implicitWidth + 24) : (numText.implicitWidth + 12)
                 implicitHeight: 26
 
-                onActiveChanged: { if (active) root.activeItem = delegateRoot }
-                Component.onCompleted: { if (active) root.activeItem = delegateRoot }
-
-                Behavior on implicitWidth { NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
+                onIsActiveChanged: { if (isActive) root.activeItem = delegateRoot }
+                Component.onCompleted: { if (isActive) root.activeItem = delegateRoot }
 
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-
-                    // 保持 index 逻辑，防止乱跳
-                    onClicked: Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", model.idx.toString()])
+                    onClicked: {
+                        if (isHyprland) {
+                            modelData.activate()
+                        } else if (isNiri) {
+                            Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", workspaceId.toString()])
+                        }
+                    }
                 }
 
                 Text {
                     id: numText
-
                     anchors.centerIn: parent
-                    text: model.idx
+                    text: workspaceId
                     font.bold: true
                     font.pixelSize: 14
-
-                    // 【修改点 2】 
-                    // 选中状态：黑色 ("#000000") - 为了配合亮色的高亮块
-                    // 未选中状态：白色 ("#ffffff") - 原 Colorscheme.text 替换
-                    color: delegateRoot.active ? "#000000" : "#ffffff"
-
+                    // 如果是 Hyprland 额外支持 urgent 颜色
+                    color: (isHyprland && modelData.urgent) ? "#ff5555" : (delegateRoot.isActive ? "#000000" : "#ffffff")
                     Behavior on color { ColorAnimation { duration: 200 } }
                 }
             }
