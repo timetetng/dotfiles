@@ -46,3 +46,7 @@ quickshell/quickshell/config/BiliConfig.qml
 
 ./scripts/python/.git
 ./scripts/python/.venv
+
+./mpd/database
+./mpd/state
+./mpd/playlists

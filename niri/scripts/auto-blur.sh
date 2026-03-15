@@ -23,7 +23,7 @@ FLOAT_BYPASS_THRESHOLD="1"
 ENABLE_DARK="false"
 
 # 这里的数值用来在缓存丢失时进行兜底生成，保持和 overview.sh 完全一致
-BLUR_ARG_PURE="0x8"
+BLUR_ARG_PURE="0x4"
 BLUR_ARG_DARK="0x4"
 DARK_OPACITY="40%"
 ANIM_TYPE="fade"

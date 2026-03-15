@@ -11,21 +11,21 @@ binds {
 
     // Mod-Shift-/, which is usually the same as Mod-?,
     // shows a list of important hotkeys.
-    Mod+P { spawn "quickshell" "-p" "/home/xingjian/.config/quickshell/Modules/Lock/Lock.qml"; }
-    Mod+D { spawn "sh" "-c" "echo 'dashboard' > /tmp/qs_launcher.pipe"; }
-    Mod+C { spawn "sh" "-c" "echo 'wallpaper' > /tmp/qs_launcher.pipe"; }
-    Mod+A { spawn "sh" "-c" "echo 'toggle' > /tmp/qs_launcher.pipe"; }
+    Mod+P { spawn "quickshell" "ipc" "call" "lock" "open"; }
+    Mod+D { spawn "quickshell" "ipc" "call" "island" "dashboard"; }
+    Mod+Shift+T { spawn "quickshell" "ipc" "call" "island" "tools"; }
+    Mod+A { spawn "quickshell" "ipc" "call" "island" "overview"; }
     Mod+Shift+Slash { show-hotkey-overlay; }
-    Mod+Ctrl+W {spawn "bash" "/home/xingjian/.config/swww-rofi/swww-rofi.sh";}
+    Mod+C {spawn "bash" "/home/xingjian/dotfiles/rofi/swww-rofi.sh";}
     Mod+F1 { spawn-sh "pkill fcitx5 || fcitx5";}
     Mod+F2 {spawn-sh "pkill waybar || true && waybar";}
     Mod+G { spawn "nautilus"; }
     Mod+M { quit; }
     Mod+E { spawn "firefox"; }
-    Mod+T { spawn "sh" "-c" "echo 'bilibili' > /tmp/qs_launcher.pipe"; }
+    Mod+T { spawn "quickshell" "ipc" "call" "biliBarrage" "toggle"; }
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Q hotkey-overlay-title="Open a Terminal" { spawn "footclient"; }
-Mod+R { spawn "bash" "/home/xingjian/.config/rofi/launchers/type-6/launcher.sh"; }
+    Mod+R { spawn "bash" "/home/xingjian/.config/rofi/launchers/type-6/launcher.sh"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
     Mod+S { spawn "bash" "/home/xingjian/Projects/sshtf/rofi-ssh.sh"; }
      // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
