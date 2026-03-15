@@ -15,7 +15,12 @@ Item {
         
         onNotification: (n) => {
             // 1. 过滤播放器
-            if (n.desktopEntry === "spotify" || n.desktopEntry.includes("player")) return;
+ if (entry === "spotify" || 
+        entry.includes("player") || 
+        entry.includes("qq") || 
+        entry.includes("linuxqq")) {
+        return; // 直接跳过，不执行后续逻辑
+    }
 
             // 2. 队列管理
             if (notifModel.count >= 2) notifModel.remove(0);

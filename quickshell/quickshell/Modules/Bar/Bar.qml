@@ -27,11 +27,17 @@ Variants {
         anchors { left: true; top: true; right: true }
         color: "transparent"
         
-        property real barHeight: 52
+        // ============================================================
+        // 控制高度与间隙的变量
+        // ============================================================
+        property real barHeight: 40  // 【修改这里】更改 Bar 本体的高度
+        property real barGap: 0     // 【新增这里】更改 Bar 与下方窗口的间隙（例如 10 像素）
         
-        implicitHeight: Math.max(barWindow.barHeight, island.height + island.anchors.topMargin + 5)
+        // 窗口实际总高度：取 (Bar高度+间隙) 与 灵动岛高度 之间的最大值
+        implicitHeight: Math.max(barWindow.barHeight + barWindow.barGap, island.height + island.anchors.topMargin + 5)
         
-        exclusiveZone: barHeight
+        // 独占区域：告诉 Wayland 预留 (高度 + 间隙) 的空间，从而把下方窗口往下推
+        exclusiveZone: barHeight + barGap
         
         WlrLayershell.layer: WlrLayer.Top
 
@@ -69,9 +75,6 @@ Variants {
             }
 
             // --- 右侧组件 ---
-            // ... 上面的代码保持不变 ...
-
-            // --- 右侧组件 ---
             RowLayout {
                 // 钉在右边
                 anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
@@ -99,9 +102,6 @@ Variants {
                 // 3. 音量
                 Volume {}
 
-
-                
-                
                 NotificationButton {
                     Layout.alignment: Qt.AlignVCenter
                 }

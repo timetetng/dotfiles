@@ -21,10 +21,10 @@ binds {
     Mod+F2 {spawn-sh "pkill waybar || true && waybar";}
     Mod+G { spawn "nautilus"; }
     Mod+M { quit; }
-    Mod+E { spawn "zen-browser"; }
+    Mod+E { spawn "firefox"; }
     Mod+T { spawn "sh" "-c" "echo 'bilibili' > /tmp/qs_launcher.pipe"; }
     // Suggested binds for running programs: terminal, app launcher, screen locker.
-    Mod+Q hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
+    Mod+Q hotkey-overlay-title="Open a Terminal" { spawn "footclient"; }
 Mod+R { spawn "bash" "/home/xingjian/.config/rofi/launchers/type-6/launcher.sh"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
     Mod+S { spawn "bash" "/home/xingjian/Projects/sshtf/rofi-ssh.sh"; }

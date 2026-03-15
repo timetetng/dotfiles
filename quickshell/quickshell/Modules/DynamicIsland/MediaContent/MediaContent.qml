@@ -35,7 +35,7 @@ Item {
                 Layout.preferredWidth: 60
                 Layout.preferredHeight: 60
                 radius: 12
-                color: Colorsheme.background
+                color: Colorscheme.background
                 clip: true
                 
                 Image {
@@ -185,7 +185,7 @@ Item {
                     }
                     ColorOverlay {
                         anchors.fill: prevIcon
-                        source: prevIcon
+                        source: previcon
                         color: "white"
                     }
                 }

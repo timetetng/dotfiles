@@ -12,7 +12,7 @@ spawn-at-startup "xwayland-satellite"
 spawn-sh-at-startup "QT_SCALE_FACTOR=0.75 quickshell"
 spawn-sh-at-startup "sleep 2 && swww restore"
 spawn-at-startup "~/.config/niri/scripts/auto-blur.sh"
-
-
+spawn-sh-at-startup "mdp-mpris &" 
 spawn-sh-at-startup "clipse --listen"
 spawn-at-startup "flclash"
+spawn-sh-at-startup "foot --server"

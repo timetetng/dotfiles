@@ -63,4 +63,14 @@
       </metadata>
     </info>
   </bookmark>
+  <bookmark href="sftp://xingjian@10.0.0.2/home/xingjian" added="2026-03-13T20:11:30.516199Z" modified="2026-03-13T20:11:30.516205Z" visited="2026-03-13T20:11:30.516200Z">
+    <title>xingjian</title>
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <bookmark:applications>
+          <bookmark:application name="org.gnome.Nautilus" exec="&apos;org.gnome.Nautilus %u&apos;" modified="2026-03-13T20:11:30.516202Z" count="1"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
 </xbel>
