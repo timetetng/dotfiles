@@ -4,8 +4,11 @@ return {
     "mfussenegger/nvim-dap",
     config = function()
       local dap = require("dap")
-      local map = vim.keymap.set
-      local opts = { noremap = true, silent = true }
+
+      -- 优化 map 函数，使其原生支持传入 desc，方便 which-key 抓取
+      local function map(mode, lhs, rhs, desc)
+        vim.keymap.set(mode, lhs, rhs, { noremap = true, silent = true, desc = desc })
+      end
 
       -- ⚡ 断点和当前行图标
       vim.fn.sign_define("DapBreakpoint", { text = "", texthl = "DapBreakpoint" })
@@ -77,20 +80,24 @@ return {
         },
       }
 
-      -- 快捷键
-      map("n", "<F5>", dap.continue, opts)
-      map("n", "<F10>", dap.step_over, opts)
-      map("n", "<F11>", dap.step_into, opts)
-      map("n", "<F12>", dap.step_out, opts)
-      map("n", "<leader>b", dap.toggle_breakpoint, opts)
+      -- ===============================
+      -- 调试快捷键 (已补全中文描述)
+      -- ===============================
+      map("n", "<F5>", dap.continue, "启动/继续调试 (Continue)")
+      map("n", "<F10>", dap.step_over, "单步跳过 (Step Over)")
+      map("n", "<F11>", dap.step_into, "单步进入 (Step Into)")
+      map("n", "<F12>", dap.step_out, "单步退出 (Step Out)")
+
+      map("n", "<leader>b", dap.toggle_breakpoint, "切换断点 (Toggle Breakpoint)")
       map("n", "<leader>B", function()
-        dap.set_breakpoint(vim.fn.input("Breakpoint condition: "))
-      end, opts)
-      map("n", "<leader>dr", dap.repl.open, opts)
-      map("n", "<leader>dl", dap.run_last, opts)
+        dap.set_breakpoint(vim.fn.input("断点触发条件 (例如 i==5): "))
+      end, "设置条件断点 (Condition)")
+
+      map("n", "<leader>dr", dap.repl.open, "打开调试控制台 (REPL)")
+      map("n", "<leader>dl", dap.run_last, "重新运行上次调试 (Run Last)")
       map("n", "<leader>du", function()
         require("dapui").toggle()
-      end, opts)
+      end, "切换调试面板 (DAP UI)")
     end,
   },
 

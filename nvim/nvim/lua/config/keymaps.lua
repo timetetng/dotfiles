@@ -1,97 +1,93 @@
--- Keymaps are automatically loaded on the VeryLazy event
--- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
--- Add any additional keymaps here
-
 -- lua/keymaps.lua
-local map = vim.keymap.set
-local opts = { noremap = true, silent = true }
+
+-- ===============================
+-- 快捷键辅助函数优化
+-- ===============================
+-- 修改了 map 函数，让它默认接受一个 desc（描述）参数
+-- 这样绑定的同时就能告诉 which-key 这个键是干嘛的，一劳永逸
+local function map(mode, lhs, rhs, desc)
+  vim.keymap.set(mode, lhs, rhs, { noremap = true, silent = true, desc = desc })
+end
 
 -- leader 键
 vim.g.mapleader = " " -- 空格为 leader
 
 -- ===============================
--- NvimTree 文件树
+-- BufferLine 标签页操作
 -- ===============================
--- map("n", "<leader>e", ":NvimTreeToggle<CR>", opts) -- 打开/关闭文件树
--- map("n", "<leader>r", ":NvimTreeRefresh<CR>", opts) -- 刷新文件树
+map("n", "<leader><PageDown>", ":BufferLineCycleNext<CR>", "下一个 Buffer")
+map("n", "<leader><PageUp>", ":BufferLineCyclePrev<CR>", "上一个 Buffer")
 
--- 下一个 / 上一个 Tab
-map("n", "<leader><PageDown>", ":BufferLineCycleNext<CR>", opts) -- 下一个 Tab
-map("n", "<leader><PageUp>", ":BufferLineCyclePrev<CR>", opts) -- 上一个 Tab
-
--- 快速跳转到指定 Tab（1~9）
+-- 快速跳转到指定 Tab（1~9）(这些可以在 which-key 里隐藏掉以节省空间)
 for i = 1, 9 do
-  map("n", "<leader>" .. i, ":BufferLineGoToBuffer " .. i .. "<CR>", opts)
+  map("n", "<leader>" .. i, ":BufferLineGoToBuffer " .. i .. "<CR>", "跳转到 Buffer " .. i)
 end
 
 -- 关闭当前 Tab
-map("n", "<leader>c", ":bdelete!<CR>", opts)
+map("n", "<leader>c", ":bdelete!<CR>", "关闭当前 Buffer")
+
+-- 设置显示 / 不显示 tab
+map("n", "<leader>tb", function()
+  if vim.o.showtabline == 0 then
+    vim.o.showtabline = 2
+  else
+    vim.o.showtabline = 0
+  end
+end, "切换 Buffer 栏显示")
 
 -- ===============================
--- 分屏操作
+-- 分屏与窗口移动 (建议在 which-key 中隐藏提示)
 -- ===============================
--- map("n", "<leader>v", ":vsplit<CR>", opts) -- 垂直分屏
--- map("n", "<leader>s", ":split<CR>", opts) -- 水平分屏
-map("n", "<leader><Left>", "<C-w>h", opts) -- 移动到左边窗口
-map("n", "<leader><Down>", "<C-w>j", opts) -- 移动到下边窗口
-map("n", "<leader><Up>", "<C-w>k", opts) -- 移动到上边窗口
-map("n", "<leader><Right>", "<C-w>l", opts) -- 移动到右边窗口
+map("n", "<leader>h", "<C-w>h", "移动到左窗口")
+map("n", "<leader>j", "<C-w>j", "移动到下窗口")
+map("n", "<leader>k", "<C-w>k", "移动到上窗口")
+map("n", "<leader>l", "<C-w>l", "移动到右窗口")
 
 -- ===============================
--- 文件操作
+-- 基础文件操作
 -- ===============================
-map("n", "<leader>w", ":w<CR>", opts) -- 保存
-map("n", "<leader>q", ":q<CR>", opts) -- 关闭
+map("n", "<leader>w", ":w<CR>", "保存文件")
+map("n", "<leader>q", ":q<CR>", "退出")
+map("n", "<leader>e", ":Neotree toggle<CR>", "文件树 (Neotree)")
 
 -- ===============================
--- Telescope 搜索（模糊查找）
--- 需要安装 telescope.nvim
+-- 搜索与高亮操作
 -- ===============================
--- map("n", "<leader>ff", ":Telescope find_files<CR>", opts) -- 搜索文件 -- 基于项目路径
--- map("n", "<leader>fg", ":Telescope live_grep<CR>", opts) -- grep 搜索 -- 基于项目路径
--- map("n", "<leader>fb", ":Telescope buffers<CR>", opts) -- 切换 buffer
--- map("n", "<leader>fh", ":Telescope help_tags<CR>", opts) -- 查帮助文档
--- map("n", "<leader>rf", ":Telescope oldfiles<CR>", opts) -- 查询近期文件
--- vim.keymap.set("n", "<leader>gr", "<cmd>Telescope lsp_references<CR>", { desc = "Find References" })
+map("n", "<Esc>", "<cmd>nohlsearch<CR>", "取消搜索高亮")
 
+-- ===============================
+-- 终端与系统剪贴板操作
+-- ===============================
 -- 在终端模式中按 Esc 直接退出到普通模式
-vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { noremap = true, silent = true })
+vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { noremap = true, silent = true, desc = "退出终端插入模式" })
+
+-- 兼容终端中使用 Ctrl+C/X/V 复制粘贴系统剪贴板
+vim.keymap.set("v", "<C-c>", [["+y]], { noremap = true, silent = true, desc = "复制到系统剪贴板" })
+vim.keymap.set("n", "<C-c>", [["+yy]], { noremap = true, silent = true, desc = "复制整行到剪贴板" })
+vim.keymap.set("v", "<C-x>", [["+d]], { noremap = true, silent = true, desc = "剪切到系统剪贴板" })
+vim.keymap.set("n", "<C-x>", [["+dd]], { noremap = true, silent = true, desc = "剪切整行到剪贴板" })
+vim.keymap.set("n", "<C-v>", [["+p]], { noremap = true, silent = true, desc = "粘贴系统剪贴板" })
+vim.keymap.set("v", "<C-v>", [["+p]], { noremap = true, silent = true, desc = "粘贴系统剪贴板" })
 
 -- ===============================
--- 底部终端
+-- 文本选择与缩进
 -- ===============================
---[[ map("n", "<leader>t", ":botright 10split | terminal<CR>i", opts) -- 打开底部终端并进入插入模式 ]]
+map("n", "vv", "v%", "选中匹配的括号/标签")
+map("n", "vc", "viw", "选中当前单词")
+map("n", "vl", "V", "选中整行")
 
--- 可选：兼容终端中使用 Ctrl+C（仅在 GUI 中安全，终端中慎用）
-vim.keymap.set("v", "<C-c>", [["+y]], { noremap = true, silent = true })
-vim.keymap.set("n", "<C-c>", [["+yy]], { noremap = true, silent = true })
-
--- 剪切到系统剪贴板
-vim.keymap.set("v", "<C-x>", [["+d]], { noremap = true, silent = true }) -- 可视模式剪切
-vim.keymap.set("n", "<C-x>", [["+dd]], { noremap = true, silent = true }) -- 普通模式剪切整行
-
--- 黏贴到当前光标位置
-vim.keymap.set("n", "<C-v>", [["+p]], { noremap = true, silent = true })
-vim.keymap.set("v", "<C-v>", [["+p]], { noremap = true, silent = true })
+vim.keymap.set("v", "<Tab>", ">", { noremap = true, silent = true, desc = "增加缩进" })
+vim.keymap.set("v", "<S-Tab>", "<", { noremap = true, silent = true, desc = "减少缩进" })
 
 -- ===============================
--- 文本选择与跳转
+-- 问题诊断 (Trouble)
 -- ===============================
--- 将 vv 映射为 v%，快速选中到匹配的括号/标签
--- 例如：光标在 { 上按 vv，会选中从 { 到 } 的整个块
-map("n", "vv", "v%", opts)
-map("n", "vc", "viw", opts)
-map("n", "vl", "V", opts)
+map("n", "<leader>xx", ":Trouble diagnostics toggle<CR>", "诊断面板 (Trouble)")
 
 -- ===============================
--- 搜索操作
+-- 自定义悬浮终端 (Float Terminal)
 -- ===============================
--- map("n", "<leader><space>", ":let @/=''<CR>:noh<CR>", opts) -- 清除搜索高亮
-
-map("n", "<Esc>", "<cmd>nohlsearch<CR>", opts)
-
 local float_term = {}
-
 float_term.term_buf = nil
 float_term.term_win = nil
 float_term.term_chan = nil
@@ -105,7 +101,6 @@ function float_term.open()
     if float_term.term_win and vim.api.nvim_win_is_valid(float_term.term_win) then
       vim.api.nvim_set_current_win(float_term.term_win)
     else
-      -- 重新创建窗口
       local width = math.floor(vim.o.columns * float_width)
       local height = math.floor(vim.o.lines * float_height)
       local row = math.floor((vim.o.lines - height) / 2)
@@ -124,7 +119,6 @@ function float_term.open()
     return float_term.term_chan
   end
 
-  -- 创建新的 buffer
   float_term.term_buf = vim.api.nvim_create_buf(false, true)
 
   local width = math.floor(vim.o.columns * float_width)
@@ -142,44 +136,21 @@ function float_term.open()
     border = "rounded",
   })
 
-  -- Linux 使用 zsh 打开交互终端
   float_term.term_chan = vim.fn.termopen({ "zsh", "-i" }, { detach = 0 })
-
   vim.cmd("startinsert")
-
   return float_term.term_chan
 end
 
--- 发送命令到浮窗终端
 function float_term.send(cmd)
   local chan = float_term.open()
   vim.fn.chansend(chan, cmd .. "\n")
 end
 
--- 清空浮窗终端
 function float_term.clear()
   if float_term.term_buf and vim.api.nvim_buf_is_valid(float_term.term_buf) then
     vim.api.nvim_buf_set_lines(float_term.term_buf, 0, -1, false, {})
   end
 end
 
--- 打开一个弹窗
-map("n", "<leader>ft", float_term.open, opts)
-
--- 打开诊断窗口
-vim.keymap.set("n", "<leader>xx", ":Trouble diagnostics toggle<CR>", opts)
-
--- 在你的 keymaps.lua 中添加
-vim.keymap.set("v", "<Tab>", ">", { noremap = true, silent = true })
-vim.keymap.set("v", "<S-Tab>", "<", { noremap = true, silent = true }) -- Shift+Tab 减少缩进
-
-vim.keymap.set("n", "<leader>e", ":Neotree toggle<CR>", { noremap = true, silent = true })
-
--- 设置显示 / 不显示 tab
-vim.keymap.set("n", "<leader>tb", function()
-  if vim.o.showtabline == 0 then
-    vim.o.showtabline = 2
-  else
-    vim.o.showtabline = 0
-  end
-end, { desc = "Toggle Bufferline" })
+-- 这里加上了 desc，Which-Key 就能认出它了！
+map("n", "<leader>ft", float_term.open, "打开悬浮终端")
