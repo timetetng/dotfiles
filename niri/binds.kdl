@@ -14,7 +14,7 @@ binds {
     Mod+P { spawn "quickshell" "ipc" "call" "lock" "open"; }
     Mod+D { spawn "quickshell" "ipc" "call" "island" "dashboard"; }
     Mod+Shift+T { spawn "quickshell" "ipc" "call" "island" "tools"; }
-    Mod+A { spawn "quickshell" "ipc" "call" "island" "overview"; }
+    Mod+A { spawn "footclient" "ncmpcpp"; }
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+C {spawn "bash" "/home/xingjian/dotfiles/rofi/swww-rofi.sh";}
     Mod+F1 { spawn-sh "pkill fcitx5 || fcitx5";}
