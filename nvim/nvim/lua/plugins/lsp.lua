@@ -3,6 +3,11 @@ return {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
+      -- 1. 强制依赖 mason，确保环境变量注入在 lspconfig 启动之前
+      "williamboman/mason.nvim",
+      -- 2. 核心桥接插件：自动将 mason 安装的 server 注册给 lspconfig
+      "williamboman/mason-lspconfig.nvim",
+
       "glepnir/lspsaga.nvim",
       "folke/trouble.nvim",
       "j-hui/fidget.nvim",
@@ -10,7 +15,7 @@ return {
       "b0o/schemastore.nvim",
     },
     config = function()
-      -- 1. 优化 notify，屏蔽冗余信息
+      -- 优化 notify，屏蔽冗余信息
       local original_notify = vim.notify
       vim.notify = function(msg, level, opts)
         if type(msg) == "string" and msg:match("framework") and msg:match("deprecated") then
@@ -21,7 +26,7 @@ return {
 
       local lspconfig = require("lspconfig")
 
-      -- FIX 1: 安全加载 blink.cmp
+      -- 安全加载 blink.cmp，获取 LSP capabilities
       local has_blink, blink = pcall(require, "blink.cmp")
       local capabilities = has_blink and blink.get_lsp_capabilities() or vim.lsp.protocol.make_client_capabilities()
 
@@ -31,115 +36,130 @@ return {
         end
       end
 
-      -- 获取当前环境下 lspconfig 支持的所有 server 列表
-      local available_servers = lspconfig.util.available_servers()
-      local function is_server_supported(name)
-        for _, v in ipairs(available_servers) do
-          if v == name then
-            return true
-          end
-        end
-        return false
-      end
+      -- =======================================================
+      -- 核心修复：初始化 Mason 及其桥接插件
+      -- =======================================================
+      require("mason").setup()
 
-      -- setup_server 包装函数
-      local function setup_server(server_name, config)
-        -- 如果 lspconfig 根本不支持这个名字，直接跳过，防止 __index 报错
-        if not is_server_supported(server_name) then
-          return
-        end
-
-        config = config or {}
-        config.capabilities = vim.tbl_deep_extend("force", capabilities, config.capabilities or {})
-        config.on_attach = on_attach
-
-        -- 再次使用 pcall 确保万无一失
-        pcall(function()
-          lspconfig[server_name].setup(config)
-        end)
-      end
+      require("mason-lspconfig").setup({
+        -- 确保自动安装你常用的 LSP，不用再手动去 Mason 里点
+        ensure_installed = {
+          "pyright",
+          "gopls",
+          "marksman",
+          "texlab",
+          "jdtls",
+          "bashls",
+          "lua_ls",
+          "html",
+          "cssls",
+          "jsonls",
+          "yamlls",
+          "dockerls",
+        },
+        automatic_installation = true,
+      })
 
       -- =======================================================
-      -- 1. 主力语言配置
+      -- 使用 setup_handlers 自动接管所有已安装的 LSP 配置
       -- =======================================================
+      require("mason-lspconfig").setup_handlers({
+        -- 1. 默认处理函数 (会自动作用于 html, cssls, bashls 等没有特殊设置的 server)
+        function(server_name)
+          lspconfig[server_name].setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+          })
+        end,
 
-      setup_server("pyright", {
-        settings = {
-          python = {
-            analysis = {
-              typeCheckingMode = "basic",
-              autoSearchPaths = true,
-              useLibraryCodeForTypes = true,
-              diagnosticMode = "workspace",
+        -- 2. 针对特定语言的个性化覆盖配置
+        ["pyright"] = function()
+          lspconfig.pyright.setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+            settings = {
+              python = {
+                analysis = {
+                  typeCheckingMode = "basic",
+                  autoSearchPaths = true,
+                  useLibraryCodeForTypes = true,
+                  diagnosticMode = "workspace",
+                },
+              },
             },
-          },
-        },
-      })
+          })
+        end,
 
-      setup_server("gopls", {
-        settings = {
-          gopls = {
-            analyses = { unusedparams = true },
-            staticcheck = true,
-            gofumpt = true,
-          },
-        },
-      })
-
-      setup_server("marksman", {})
-
-      setup_server("texlab", {
-        settings = {
-          texlab = {
-            build = { onSave = true },
-          },
-        },
-      })
-
-      -- =======================================================
-      -- 2. 其他语言与工具
-      -- =======================================================
-
-      setup_server("jdtls", {})
-      setup_server("bashls", {})
-
-      setup_server("lua_ls", {
-        settings = {
-          Lua = {
-            runtime = { version = "LuaJIT" },
-            diagnostics = { globals = { "vim" } },
-            workspace = {
-              library = vim.api.nvim_get_runtime_file("", true),
-              checkThirdParty = false,
+        ["gopls"] = function()
+          lspconfig.gopls.setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+            settings = {
+              gopls = {
+                analyses = { unusedparams = true },
+                staticcheck = true,
+                gofumpt = true,
+              },
             },
-            telemetry = { enable = false },
-          },
-        },
+          })
+        end,
+
+        ["lua_ls"] = function()
+          lspconfig.lua_ls.setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+            settings = {
+              Lua = {
+                runtime = { version = "LuaJIT" },
+                diagnostics = { globals = { "vim" } },
+                workspace = {
+                  library = vim.api.nvim_get_runtime_file("", true),
+                  checkThirdParty = false,
+                },
+                telemetry = { enable = false },
+              },
+            },
+          })
+        end,
+
+        ["jsonls"] = function()
+          lspconfig.jsonls.setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+            settings = {
+              json = {
+                schemas = (function()
+                  local ok, store = pcall(require, "schemastore")
+                  return ok and store.json.schemas() or {}
+                end)(),
+                validate = { enable = true },
+              },
+            },
+          })
+        end,
+
+        ["yamlls"] = function()
+          lspconfig.yamlls.setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+            settings = {
+              yaml = { keyOrdering = false },
+            },
+          })
+        end,
+
+        ["texlab"] = function()
+          lspconfig.texlab.setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+            settings = {
+              texlab = {
+                build = { onSave = true },
+              },
+            },
+          })
+        end,
       })
-
-      setup_server("html", {})
-      setup_server("cssls", {})
-
-      -- JSON (带 SchemaStore 保护)
-      setup_server("jsonls", {
-        settings = {
-          json = {
-            schemas = (function()
-              local ok, store = pcall(require, "schemastore")
-              return ok and store.json.schemas() or {}
-            end)(),
-            validate = { enable = true },
-          },
-        },
-      })
-
-      setup_server("yamlls", {
-        settings = {
-          yaml = { keyOrdering = false },
-        },
-      })
-
-      setup_server("dockerls", {})
 
       -- =================== 组件配置 ===================
 
