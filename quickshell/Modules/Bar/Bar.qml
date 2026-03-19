@@ -15,7 +15,6 @@ import qs.Modules.Bar.SysMonitor
 import qs.Modules.Bar.NotificationButton
 import qs.Modules.Bar.QuickSettings
 // import qs.Modules.Bar.DayNightSwitch
-// 删除了对 DynamicIsland 的引入
 
 Variants {
     model: Quickshell.screens

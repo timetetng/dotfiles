@@ -12,7 +12,8 @@ binds {
     // Mod-Shift-/, which is usually the same as Mod-?,
     // shows a list of important hotkeys.
     Mod+P { spawn "quickshell" "ipc" "call" "lock" "open"; }
-    Mod+D { spawn "quickshell" "ipc" "call" "island" "dashboard"; }
+    Mod+Shift+D { spawn "quickshell" "ipc" "call" "island" "dashboard"; }
+    Mod+D { spawn "quickshell" "ipc" "call" "island" "hub"; }
     Mod+Shift+T { spawn "quickshell" "ipc" "call" "island" "tools"; }
     Mod+A { spawn "footclient" "ncmpcpp"; }
     Mod+Shift+Slash { show-hotkey-overlay; }

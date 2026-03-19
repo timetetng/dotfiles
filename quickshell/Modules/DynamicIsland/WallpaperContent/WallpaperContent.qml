@@ -9,14 +9,14 @@ Item {
     id: root
     signal wallpaperChanged()
 
-    property string wallpaperPath: Quickshell.env("HOME") + "/.config/wallpaper"
+    property string wallpaperPath: "/home/xingjian/.config/wallpaper"
     property var allWallpapers: [] 
     
     ListModel { id: wallpaperModel }
 
     Process {
         id: scanWallpapers
-        command: ["bash", "-c", "find " + root.wallpaperPath + " -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) | sort"]
+        command: ["bash", "-c", "find -L \"" + root.wallpaperPath + "\" -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) | sort"]
         running: false
         stdout: SplitParser {
             splitMarker: "\n"

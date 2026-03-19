@@ -1,44 +1,12 @@
 .pragma library
 
 function fetchLocationAndWeather(callback) {
-    var locXhr = new XMLHttpRequest();
-    locXhr.timeout = 5000; // 强制 5 秒超时设置
+    // 1. 在这里手动指定你的位置信息
+    var lat = 22.83277;
+    var lon = 108.306886;
+    var cityStr = "NANNING";
 
-    locXhr.onreadystatechange = function() {
-        if (locXhr.readyState === XMLHttpRequest.DONE) {
-            if (locXhr.status === 200) {
-                try {
-                    var locData = JSON.parse(locXhr.responseText);
-                    if (locData.success === false) {
-                        callback(null); // API 报错，返回 null
-                        return;
-                    }
-
-                    var lat = locData.latitude;
-                    var lon = locData.longitude;
-                    var cityStr = locData.city;
-                    if (!cityStr || cityStr.trim() === "") cityStr = locData.region;
-                    if (!cityStr || cityStr.trim() === "") cityStr = locData.country;
-                    if (!cityStr || cityStr.trim() === "") cityStr = "UNKNOWN";
-
-                    fetchWeatherAPI(lat, lon, cityStr.toUpperCase(), callback);
-                } catch(e) {
-                    console.log("Location Parse Error:", e);
-                    callback(null); // 解析失败，返回 null
-                }
-            } else {
-                console.log("Location Network Error:", locXhr.status);
-                callback(null); // 状态码非 200，返回 null
-            }
-        }
-    }
-    
-    // 捕获底层网络断开和超时
-    locXhr.onerror = function() { console.log("Location XHR Error"); callback(null); }
-    locXhr.ontimeout = function() { console.log("Location XHR Timeout"); callback(null); }
-
-    locXhr.open("GET", "https://ipwho.is/?t=" + new Date().getTime(), true);
-    locXhr.send();
+    fetchWeatherAPI(lat, lon, cityStr, callback);
 }
 
 function fetchWeatherAPI(lat, lon, city, callback) {

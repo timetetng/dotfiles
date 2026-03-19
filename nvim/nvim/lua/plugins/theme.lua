@@ -1,11 +1,28 @@
 -- plugins/theme.lua
 
 -- 定义你想用的主题名字
--- 可选: "tokyonight" 或 "catppuccin"
-local active_theme = "tokyonight"
+-- 可选: "tokyonight" 或 "catppuccin" 或 "nord" 等
+local active_theme = "catppuccin"
 
 -- 定义主题配置表
 local themes = {
+  -- nord
+  nord = {
+    "shaunsingh/nord.nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.g.nord_contrast = true
+      vim.g.nord_borders = false
+      vim.g.nord_disable_background = false
+      vim.g.nord_italic = false
+      vim.g.nord_uniform_diff_background = true
+      vim.g.nord_bold = false
+
+      vim.cmd("colorscheme nord")
+    end,
+  },
+
   -- tokyonight
   tokyonight = {
     "folke/tokyonight.nvim",
@@ -35,7 +52,7 @@ local themes = {
     config = function()
       require("catppuccin").setup({
         flavour = "macchiato", -- 可选: "latte", "frappe", "macchiato", "mocha"
-        background = { light = "latte", dark = "mocha" },
+        background = { light = "latte", dark = "macchiato" },
         transparent_background = true,
         term_colors = true,
         styles = {
@@ -164,11 +181,11 @@ local themes = {
         },
 
         -- code_style = {
-        --   comments = "italic",
-        --   keywords = "none",
-        --   functions = "none",
-        --   strings = "italic",
-        --   variables = "none",
+        --    comments = "italic",
+        --    keywords = "none",
+        --    functions = "none",
+        --    strings = "italic",
+        --    variables = "none",
         -- },
 
         lualine = {

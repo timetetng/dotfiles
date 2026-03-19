@@ -70,3 +70,21 @@ wifi() {
         nmcli device
     fi   
 }
+
+
+# 定义完整的插件初始化后置钩子函数，确保在插件完全加载后强制覆盖
+function zvm_after_init() {
+    # 强制开启自定义光标支持
+    export ZVM_CURSOR_STYLE_ENABLED=true
+    
+    # 强制将各模式光标变量设为闪烁状态
+    export ZVM_INSERT_MODE_CURSOR=$ZVM_CURSOR_BLINKING_BEAM
+    export ZVM_NORMAL_MODE_CURSOR=$ZVM_CURSOR_BLINKING_BLOCK
+    export ZVM_VISUAL_MODE_CURSOR=$ZVM_CURSOR_BLINKING_BLOCK
+    export ZVM_VISUAL_LINE_MODE_CURSOR=$ZVM_CURSOR_BLINKING_BLOCK
+    export ZVM_OPPEND_MODE_CURSOR=$ZVM_CURSOR_BLINKING_BLOCK
+    
+    # 移除失效的内部函数调用，改为直接向 foot 终端发送转义序列
+    # \e[5 q 代表闪烁竖线，确保终端刚打开时处于 Insert 模式且光标闪烁
+    echo -ne '\e[5 q'
+}

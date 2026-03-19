@@ -281,12 +281,14 @@ Variants {
                 Behavior on height { SpringAnimation { spring: 5.0; mass: 3.6; damping: root.hDamping; epsilon: 0.01 } }
                 Behavior on radius { SpringAnimation { spring: 5.0; mass: 3.6; damping: root.rDamping; epsilon: 0.01 } }
 
-                // ================= IPC 通信处理 =================
+// ================= IPC 通信处理 =================
                 IpcHandler {
-                    target: (root.screen && root.screen.name) ? ("island_" + root.screen.name) : ""
-                    enabled: target !== ""
+                    // 修复：将原本动态的屏幕名称改为固定的 "island"
+                    target: "island"
+                    
                     function cancelRecord() {
-                        root.isRecording = false; return "RECORD_CANCELLED"
+                        root.isRecording = false;
+                        return "RECORD_CANCELLED"
                     }
 
                     function closeAllOthers() {
@@ -299,25 +301,33 @@ Variants {
                     }
 
                     function dashboard() {
-                        if (root.showDashboard) { root.showDashboard = false; return "DASHBOARD_CLOSED" } 
-                        else { closeAllOthers(); root.showHub = false; root.showDashboard = true; return "DASHBOARD_OPENED" }
+                        if (root.showDashboard) { root.showDashboard = false;
+                            return "DASHBOARD_CLOSED" } 
+                        else { closeAllOthers();
+                            root.showHub = false; root.showDashboard = true; return "DASHBOARD_OPENED" }
                     }
                     
                     function launcher() {
-                        if (root.showLauncher) { root.showLauncher = false; return "LAUNCHER_CLOSED" } 
-                        else { closeAllOthers(); root.showHub = false; root.showLauncher = true; return "LAUNCHER_OPENED" }
+                        if (root.showLauncher) { root.showLauncher = false;
+                            return "LAUNCHER_CLOSED" } 
+                        else { closeAllOthers();
+                            root.showHub = false; root.showLauncher = true; return "LAUNCHER_OPENED" }
                     }
 
                     function hub() {
-                        if (root.showHub) { root.showHub = false; return "HUB_CLOSED" } 
-                        else { closeAllOthers(); root.showHub = true; return "HUB_OPENED" }
+                        if (root.showHub) { root.showHub = false;
+                            return "HUB_CLOSED" } 
+                        else { closeAllOthers();
+                            root.showHub = true; return "HUB_OPENED" }
                     }
 
                     function tools() {
-                        if (root.showTools) { root.showTools = false; return "TOOLS_CLOSED" } 
-                        else { closeAllOthers(); root.showHub = false; root.showTools = true; return "TOOLS_OPENED" }
+                        if (root.showTools) { root.showTools = false;
+                            return "TOOLS_CLOSED" } 
+                        else { closeAllOthers();
+                            root.showHub = false; root.showTools = true; return "TOOLS_OPENED" }
                     }
-                }
+                  }
 
                 // ================= 音频与通知 =================
                 PwObjectTracker { objects: [ Pipewire.defaultAudioSink ] }

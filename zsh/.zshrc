@@ -7,6 +7,7 @@
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
+
 plugins=(
     git
     zsh-autosuggestions
@@ -20,6 +21,7 @@ if [[ -f /usr/share/fzf/key-bindings.zsh ]]; then
     source /usr/share/fzf/key-bindings.zsh
     source /usr/share/fzf/completion.zsh
 fi
+
 # zsh-vi-mode 专用配置函数
 function zvm_after_init() {
   zvm_bindkey viins '^R' fzf-history-widget
