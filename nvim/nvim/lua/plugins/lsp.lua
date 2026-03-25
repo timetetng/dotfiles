@@ -1,6 +1,29 @@
+-- 检查系统内存是否充足 (判断 Linux /proc/meminfo)
+local function has_enough_memory()
+  local f = io.open("/proc/meminfo", "r")
+  if not f then
+    return true
+  end
+
+  local mem_total_kb = 0
+  for line in f:lines() do
+    local match = line:match("^MemTotal:%s+(%d+)%s+kB")
+    if match then
+      mem_total_kb = tonumber(match)
+      break
+    end
+  end
+  f:close()
+
+  local mem_total_gb = mem_total_kb / (1024 * 1024)
+
+  return mem_total_gb >= 3.5
+end
+
 return {
   {
     "neovim/nvim-lspconfig",
+    cond = has_enough_memory,
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       "williamboman/mason.nvim",
@@ -13,9 +36,19 @@ return {
     },
     config = function()
       local original_notify = vim.notify
+      local ignore_next_traceback = false
+
       vim.notify = function(msg, level, opts)
-        if type(msg) == "string" and msg:match("framework") and msg:match("deprecated") then
-          return
+        if type(msg) == "string" then
+          if msg:match("framework") and msg:match("deprecated") then
+            ignore_next_traceback = true
+            return
+          end
+          if ignore_next_traceback and msg:match("^stack traceback:") then
+            ignore_next_traceback = false
+            return
+          end
+          ignore_next_traceback = false
         end
         original_notify(msg, level, opts)
       end
@@ -32,7 +65,7 @@ return {
       end
 
       -- =====================================================
-      -- Mason 初始化（v2.0：移除 automatic_installation）
+      -- Mason 初始化
       -- =====================================================
       require("mason").setup()
 
@@ -54,7 +87,7 @@ return {
       })
 
       -- =====================================================
-      -- 直接配置各 LSP（替代已废弃的 setup_handlers）
+      -- 配置各 LSP
       -- =====================================================
 
       -- 默认配置：无特殊设置的 server（html, cssls, bashls, marksman, dockerls）
