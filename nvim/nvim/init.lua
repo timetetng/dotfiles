@@ -17,6 +17,9 @@ vim.g.clipboard = {
   },
 }
 
+-- 将 jk 映射为退出插入模式 (Esc)
+vim.keymap.set("i", "jk", "<Esc>", { noremap = true, silent = true, desc = "jk 退出插入模式" })
+
 vim.opt.clipboard = "unnamedplus"
 
 -- 光标闪烁

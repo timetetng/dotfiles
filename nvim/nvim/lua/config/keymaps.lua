@@ -66,8 +66,6 @@ vim.keymap.set("v", "<C-c>", [["+y]], { noremap = true, silent = true, desc = "�
 vim.keymap.set("n", "<C-c>", [["+yy]], { noremap = true, silent = true, desc = "复制整行到剪贴板" })
 vim.keymap.set("v", "<C-x>", [["+d]], { noremap = true, silent = true, desc = "剪切到系统剪贴板" })
 vim.keymap.set("n", "<C-x>", [["+dd]], { noremap = true, silent = true, desc = "剪切整行到剪贴板" })
-vim.keymap.set("n", "<C-v>", [["+p]], { noremap = true, silent = true, desc = "粘贴系统剪贴板" })
-vim.keymap.set("v", "<C-v>", [["+p]], { noremap = true, silent = true, desc = "粘贴系统剪贴板" })
 
 -- ===============================
 -- 文本选择与缩进

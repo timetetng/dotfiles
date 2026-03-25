@@ -88,3 +88,21 @@ function zvm_after_init() {
     # \e[5 q 代表闪烁竖线，确保终端刚打开时处于 Insert 模式且光标闪烁
     echo -ne '\e[5 q'
 }
+
+# 下载 X (Twitter) 视频的快捷函数
+xdl() {
+    # 检查是否传入了参数
+    if [[ -z "$1" ]]; then
+        echo "错误：请提供至少一个 X (Twitter) 视频链接。"
+        echo "用法: dlx <推文链接> [更多链接...]"
+        return 1
+    fi
+
+    # 确保目标文件夹存在，防止 yt-dlp 因目录缺失报错
+    mkdir -p "/home/xingjian/Videos/Twitter"
+
+    # 执行下载，使用 "$@" 允许你一次性粘贴多个链接进行批量下载
+    yt-dlp --cookies-from-browser firefox \
+           -o "/home/xingjian/Videos/Twitter/%(uploader)s_%(id)s.%(ext)s" \
+           "$@"
+}

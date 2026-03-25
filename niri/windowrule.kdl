@@ -34,5 +34,19 @@ window-rule {
     open-floating true
 }
 
+window-rule {
+    // 1. 匹配程序
+    // 在 Wayland 环境中，通常使用 app-id 来替代 X11 的 class。
+    // 如果匹配不到，建议在应用打开时运行 `niri msg windows` 确认其准确的 app-id。
+    match app-id=r#"^win11-clipboard-history-bin$"#
+    
+    // 2. 强制作为悬浮窗口打开
+    open-floating true
+    
+    // 3. 设置窗口的固定尺寸大小 (宽 400，高 500)
+    default-column-width { fixed 400; }
+    default-window-height { fixed 500; }
+}
+
 
 

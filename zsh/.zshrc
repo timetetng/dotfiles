@@ -6,6 +6,7 @@
 # ================= 1. 核心框架配置 =================
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
+ZVM_VI_ESCAPE_BINDS=('^[' 'jk')
 
 
 plugins=(
@@ -26,6 +27,11 @@ fi
 function zvm_after_init() {
   zvm_bindkey viins '^R' fzf-history-widget
   zvm_bindkey vicmd '^R' fzf-history-widget
+  
+  zvm_bindkey viins 'jk' vi-cmd-mode
+  zvm_bindkey viins '^F' autosuggest-accept
+  zvm_bindkey viins '^E' vi-forward-word
+  zvm_bindkey viins '^L' forward-char
 }
 bindkey -M viins '^[' vi-cmd-mode
 bindkey -M viins '\e' vi-cmd-mode
