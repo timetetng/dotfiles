@@ -49,10 +49,10 @@ detect_backend() {
   if [[ "$WALLPAPER_BACKEND" == "auto" ]]; then
     if command -v awww &>/dev/null; then
       WALLPAPER_BACKEND="awww"
-    elif command -v swww &>/dev/null; then
-      WALLPAPER_BACKEND="swww"
+    elif command -v awww &>/dev/null; then
+      WALLPAPER_BACKEND="awww"
     else
-      echo "Error: Neither 'awww' nor 'swww' found."
+      echo "Error: Neither 'awww' nor 'awww' found."
       exit 1
     fi
   fi

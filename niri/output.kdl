@@ -12,6 +12,6 @@ output "HDMI-A-1" {
 }
 
 layer-rule{
-    match namespace="swww-daemonoverview"
+    match namespace="awww-daemonoverview"
      place-within-backdrop true
 }
