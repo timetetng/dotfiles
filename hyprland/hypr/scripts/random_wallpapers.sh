@@ -33,4 +33,4 @@ if [ -z "$WALLPAPER" ]; then
 fi
 
 # 3. 设置壁纸
-swww img "$WALLPAPER" --outputs "$ACTIVE_MONITOR" --transition-type random
+awww img "$WALLPAPER" --outputs "$ACTIVE_MONITOR" --transition-type random

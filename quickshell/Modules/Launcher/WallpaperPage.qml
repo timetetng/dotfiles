@@ -39,7 +39,7 @@ Item {
         onExited: {
             root.isLoading = false
             
-            // 【核心优化】：彻底抛弃底层的 swww query 进程！
+            // 【核心优化】：彻底抛弃底层的 awww query 进程！
             // 直接白嫖 LauncherWindow 刚打开时就已经查好的全局变量
             let currentPath = Colorscheme.currentWallpaperPreview.replace("file://", "");
             
@@ -165,7 +165,7 @@ Item {
         
         let home = Quickshell.env("HOME")
         
-        let scriptContent = "swww img '" + currentPath + "' --transition-type any --transition-duration 3 --transition-fps 60 --transition-bezier .43,1.19,1,.4;\n" +
+        let scriptContent = "awww img '" + currentPath + "' --transition-type any --transition-duration 3 --transition-fps 60 --transition-bezier .43,1.19,1,.4;\n" +
                             "matugen image '" + currentPath + "';\n" +
                            "bash '" + home + "/.config/quickshell/scripts/overview.sh' '" + currentPath + "'"
                            

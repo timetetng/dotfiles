@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 1. 严格获取路径
-WALLPAPER="${1:-$(swww query | head -n1 | grep -oP 'image: \K.*')}"
+WALLPAPER="${1:-$(awww query | head -n1 | grep -oP 'image: \K.*')}"
 
 if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
   echo "$(date) - ERROR: Invalid wallpaper path" >>/tmp/wp_debug.log
@@ -33,7 +33,7 @@ if [ ! -f "$BLURRED_WALLPAPER" ]; then
 fi
 
 # 4. 执行切换
-swww img -n overview "$BLURRED_WALLPAPER_OVERVIEW" --transition-type fade --transition-duration 0.5
+awww img -n overview "$BLURRED_WALLPAPER_OVERVIEW" --transition-type fade --transition-duration 0.5
 
 # 5. 确保复制操作在文件完全可用后执行
 cp -f "$WALLPAPER" "$CACHE_ROFI/current"

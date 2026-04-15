@@ -24,7 +24,6 @@ function y() {
     [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
     rm -f -- "$tmp"
 }
-
 # ================= Nano 拦截 =================
 nano() {
     echo "是否使用 nvim 代替(y/n)?"

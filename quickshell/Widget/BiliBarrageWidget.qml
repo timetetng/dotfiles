@@ -35,7 +35,7 @@ SlideWindow {
 
     WebSocket {
         id: wsClient
-        url: "ws://127.0.0.1:7777"
+        url: "ws://10.0.0.2:7777"
         active: true 
         onStatusChanged: {
             if (wsClient.status === WebSocket.Closed || wsClient.status === WebSocket.Error) {

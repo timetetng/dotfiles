@@ -275,7 +275,7 @@ Item {
 
         var home = Quickshell.env("HOME");
         
-        var swwwCmd = "swww img \"" + currentPath + "\" " +
+        var awwwCmd = "awww img \"" + currentPath + "\" " +
                   "--transition-type \"any\" " +
                   "--transition-duration 3 " +
                   "--transition-fps 60 " +
@@ -283,7 +283,7 @@ Item {
                   
         var matugenCmd = "matugen image \"" + currentPath + "\"";
         var overviewCmd = "bash " + home + "/.config/quickshell/scripts/overview.sh \"" + currentPath + "\"";
-        var combinedCmd = swwwCmd + " ; " + matugenCmd + " ; " + overviewCmd + " &";
+        var combinedCmd = awwwCmd + " ; " + matugenCmd + " ; " + overviewCmd + " &";
         runScript.command = ["bash", "-c", combinedCmd];
         runScript.running = true;
         

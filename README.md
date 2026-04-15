@@ -93,7 +93,7 @@ sudo pacman -S git zsh neovim hyprland waybar kitty yazi fastfetch fcitx5-im fci
 
 ## 🛠️ 手动配置说明 (Manual Notes)
 
-- **壁纸 (Wallpapers)**: `hyprland/hypr/scripts/` 中的壁纸脚本可能依赖于特定的路径。请检查 `hyprland/hypr/hyprland.conf` 中的壁纸处理 (通常使用 `swww` 或 `hyprpaper`)。
+- **壁纸 (Wallpapers)**: `hyprland/hypr/scripts/` 中的壁纸脚本可能依赖于特定的路径。请检查 `hyprland/hypr/hyprland.conf` 中的壁纸处理 (通常使用 `awww` 或 `hyprpaper`)。
 - **GTK 主题 (GTK Themes)**: 如果 GTK 设置未自动应用，请使用 `nwg-look` 进行验证。
 - **Neovim**: 首次启动时，LazyVim 将自动安装插件。
 
@@ -196,6 +196,6 @@ sudo pacman -S git zsh neovim hyprland waybar kitty yazi fastfetch fcitx5-im fci
 
 ## 🛠️ Manual Notes
 
-- **Wallpapers**: Wallpaper scripts in `hyprland/hypr/scripts/` may rely on specific paths. Check `hyprland/hypr/hyprland.conf` for wallpaper handling (often uses `swww` or `hyprpaper`)。
+- **Wallpapers**: Wallpaper scripts in `hyprland/hypr/scripts/` may rely on specific paths. Check `hyprland/hypr/hyprland.conf` for wallpaper handling (often uses `awww` or `hyprpaper`)。
 - **GTK Themes**: Use `nwg-look` to verify GTK settings if they don't apply automatically.
 - **Neovim**: Upon first launch, LazyVim will automatically install plugins.

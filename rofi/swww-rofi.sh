@@ -6,9 +6,9 @@ set -euo pipefail
 WALLPAPER_DIR="${WALLPAPER_DIR:-$HOME/.config/wallpaper}"
 ROFI_THEME="${ROFI_THEME:-$HOME/dotfiles/rofi/wallpaper_2_line.rasi}"
 
-# 启动 swww 守护进程
-if ! pgrep -x "swww-daemon" >/dev/null 2>&1; then
-  swww-daemon >/dev/null 2>&1 &
+# 启动 awww 守护进程
+if ! pgrep -x "awww-daemon" >/dev/null 2>&1; then
+  awww-daemon >/dev/null 2>&1 &
   sleep 0.25
 fi
 
@@ -52,7 +52,7 @@ if [ -z "$SELECTED" ]; then
 fi
 
 # 切换壁纸
-swww img "$SELECTED" \
+awww img "$SELECTED" \
   --transition-type "any" \
   --transition-duration 3 \
   --transition-fps 60 \
@@ -60,7 +60,7 @@ swww img "$SELECTED" \
 
 #提取颜色
 # 切换主壁纸
-swww img "$SELECTED" --transition-type "any" --transition-duration 3
+awww img "$SELECTED" --transition-type "any" --transition-duration 3
 # 发送通知
 notify-send "壁纸已切换" "$(basename "$SELECTED")" -i "$SELECTED"
 # 提取颜色

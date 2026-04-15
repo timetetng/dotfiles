@@ -37,7 +37,7 @@ PanelWindow {
     // ==========================================
     Process {
         id: syncGlobalWallpaper
-        command: ["bash", "-c", "swww query | awk -F 'image: ' '{print $2}' | head -n 1"]
+        command: ["bash", "-c", "awww query | awk -F 'image: ' '{print $2}' | head -n 1"]
         running: false
         stdout: SplitParser {
             splitMarker: "\n"

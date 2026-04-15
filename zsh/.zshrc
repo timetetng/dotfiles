@@ -6,8 +6,10 @@
 # ================= 1. 核心框架配置 =================
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
-ZVM_VI_ESCAPE_BINDS=('^[' 'jk')
 
+# 官方文档标准写法：将插入模式下的退出键设置为 jk
+# 必须放在 plugins 加载之前
+ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
 
 plugins=(
     git
@@ -27,14 +29,8 @@ fi
 function zvm_after_init() {
   zvm_bindkey viins '^R' fzf-history-widget
   zvm_bindkey vicmd '^R' fzf-history-widget
-  
-  zvm_bindkey viins 'jk' vi-cmd-mode
   zvm_bindkey viins '^F' autosuggest-accept
-  zvm_bindkey viins '^E' vi-forward-word
-  zvm_bindkey viins '^L' forward-char
 }
-bindkey -M viins '^[' vi-cmd-mode
-bindkey -M viins '\e' vi-cmd-mode
 
 source $ZSH/oh-my-zsh.sh
 
@@ -55,3 +51,32 @@ eval "$(zoxide init zsh --cmd j)"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# md - copy last command to clipboard
+MD_CMD_NAME="md"
+source "$HOME/.md/md.sh"
+
+
+
+
+
+# clashctl START
+# 加载 clashctl 命令
+. /home/xingjian/clashctl/scripts/cmd/clashctl.sh
+# 自动开启代理环境
+watch_proxy
+clashtun on > /dev/null 2>&1 
+# clashctl END
+
+fpath+=~/.zfunc; autoload -Uz compinit; compinit
+
+zstyle ':completion:*' menu select
+
+export UV_DEFAULT_INDEX="https://pypi.tuna.tsinghua.edu.cn/simple"
+#sudo sshfs xingjian@家里云:/home/xingjian /home/xingjian/share/EQ14
+TOSU_OSU_PATH=/usr/bin/osu-lazer
+
+STATIC_FOLDER_PATH=/home/xingjian/.config/tosu/.static
+
+# opencode
+export PATH=/home/xingjian/.opencode/bin:$PATH

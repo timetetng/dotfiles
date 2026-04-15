@@ -26,3 +26,10 @@ conda() {
     
     conda "$@"
 }
+
+if [[ -n $TMUX ]]; then
+    __kdwithtmuxpopup() {
+        tmux display-popup "kd $@"
+    }
+    alias kd=__kdwithtmuxpopup
+fi

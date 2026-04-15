@@ -1,49 +1,37 @@
-"$schema" = "https://yazi-rs.github.io/schemas/yazi.json"
-
 [mgr]
-linemode    = "size"
+ratio = [1,4,3]
+sort_by ="extension"
+sort_sensitive = false
+sort_reverse = false
+sort_dir_first = true
+linemode = "btime"
 show_hidden = true
-sort_by     = "natural"
-# mouse_events = []
+show_symlink = true
 
 [preview]
-wrap       = "yes"
-max_width  = 1500
-max_height = 1500
+wrap = "yes"
+image_filter = "lanczos3"
 
-[opener]
-edit = [
-	{ run = '${EDITOR:=vi} "$@"', desc = "$EDITOR", block = true },
-	{ run = 'code "$@"', orphan = true },
-]
-play = [
-	{ run = 'mpv --force-window "$@"' },
-	{ run = 'iina --no-stdin "$@"' },
-	{ run = '''mediainfo "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show media info" }
-]
-extract = [
-	{ run = 'ya pub extract --list "$@"', desc = "Extract here" },
-	{ run = 'open -a MacZip "$1"', orphan = true, desc = "MacZip" }
-]
-subtitle = [
-	{ run = ''' echo sub-add "'$0'" | socat - /tmp/mpv.sock ''', desc = "Add sub to MPV" },
-	{ run = ''' opencc -c tw2sp -i "$1" -o "$1" ''', desc = "TW to SC" },
-]
 
-[open]
-prepend_rules = [
-	{ url = "*.{ass,srt,ssa,sty,sup,vtt}", use = [ "subtitle", "edit" ] },
-]
 
-[tasks]
-image_alloc = 0
-image_bound = [ 0, 0 ]
 
 [plugin]
-prepend_fetchers = [
-	{ id = "git", url = "*", run = "git" },
-	{ id = "git", url = "*/", run = "git" },
+  prepend_previewers = [
+    { mime = "{audio,video,image}/*", run = "mediainfo"},
+    { mime = "application/subrip", run = "mediainfo" },
+    { mime = "application/postscript", run = "mediainfo" },
+    { url = "*/", run = "folder" },
+    { url = "/run/user/1000/gvfs/**/*", run = "noop" },
+    { url = "/run/media/USER_NAME/**/*", run = "noop" },
+    { url = "*.csv", run = "duckdb" },  
+    { url = "*.tsv", run = "duckdb" },  
+    { url = "*.json", run = "duckdb" },  
+    { url = "*.parquet", run = "duckdb" },  
+    { url = "*.txt", run = "duckdb" },  
+    { url = "*.xlsx", run = "duckdb" },  
+    { url = "*.db", run = "duckdb" },
+    { url = "*.duckdb", run = "duckdb" }
+  ]
+[tasks]
+  image_alloc      = 1073741824        # = 1024*1024*1024 = 1024MB
 
-	{ id = "mactag", url = "*", run = "mactag" },
-	{ id = "mactag", url = "*/", run = "mactag" },
-]

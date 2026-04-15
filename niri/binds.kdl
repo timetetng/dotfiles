@@ -23,6 +23,7 @@ binds {
     Mod+G { spawn "nautilus"; }
     Mod+M { quit; }
     Mod+E { spawn "firefox"; }
+    Mod+O {spawn-sh "tosu-overlay -i";}
     Mod+T { spawn "quickshell" "ipc" "call" "biliBarrage" "toggle"; }
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Q hotkey-overlay-title="Open a Terminal" { spawn "footclient"; }
