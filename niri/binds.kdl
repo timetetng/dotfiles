@@ -18,8 +18,6 @@ binds {
     Mod+A { spawn "footclient" "ncmpcpp"; }
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+C {spawn "bash" "/home/xingjian/dotfiles/rofi/swww-rofi.sh";}
-    Mod+F1 { spawn-sh "pkill fcitx5 || fcitx5";}
-    Mod+F2 {spawn-sh "pkill waybar || true && waybar";}
     Mod+G { spawn "nautilus"; }
     Mod+M { quit; }
     Mod+E { spawn "firefox"; }
