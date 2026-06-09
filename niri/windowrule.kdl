@@ -49,4 +49,37 @@ window-rule {
 }
 
 
+// 鸣潮主游戏窗口：启动时自动全屏
+window-rule {
+    match app-id="steam_proton" title=r#"^鸣潮"#
+    
+    // 强制自动全屏
+    //open-fullscreen true
+    
+    // 如果你更希望最大化
+     open-maximized true
+}
+
+window-rule {
+    match app-id="steam_proton" title=r#"^异环"#
+    
+    // 强制自动全屏
+    open-fullscreen true
+    
+    // 如果你更希望最大化
+    // open-maximized true
+}
+
+// osu 
+window-rule {
+    match app-id="osu!"
+    
+    // 强制自动全屏
+    //open-fullscreen true
+    
+    // 如果你更希望最大化
+     open-maximized true
+}
+
+
 

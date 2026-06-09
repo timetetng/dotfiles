@@ -25,6 +25,7 @@ binds {
     Mod+T { spawn "quickshell" "ipc" "call" "biliBarrage" "toggle"; }
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Q hotkey-overlay-title="Open a Terminal" { spawn "footclient"; }
+    Mod+Shift+Q { spawn "~/.local/bin/niri-fork-terminal.sh"; }
     Mod+R { spawn "bash" "/home/xingjian/.config/rofi/launchers/type-6/launcher.sh"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
     Mod+S { spawn "bash" "/home/xingjian/Projects/sshtf/rofi-ssh.sh"; }
@@ -64,7 +65,6 @@ binds {
 
     Mod+Left  { focus-column-left; }
     Mod+Down  { focus-window-down; }
-    Mod+Up    { focus-window-up; }
     Mod+Right { focus-column-right; }
     Mod+H     { focus-column-left; }
     Mod+J     { focus-window-down; }
@@ -120,8 +120,7 @@ binds {
 
     Mod+Page_Down      { focus-workspace-down; }
     Mod+Page_Up        { focus-workspace-up; }
-    Mod+U              { focus-workspace-down; }
-    Mod+I              { focus-workspace-up; }
+ 
     Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
     Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
     Mod+Ctrl+U         { move-column-to-workspace-down; }

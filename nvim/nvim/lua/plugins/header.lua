@@ -5,8 +5,8 @@ return {
     -- 你可以在这里自定义配置
     allow_autocmds = true,
     file_name = true,
-    author = "zzf-12", -- 你的名字
-    project = "Gesture-Reco", -- 项目名
+    author = "timetetng", -- 你的名字
+    project = nil, -- 项目名
     date_created = true,
     date_created_fmt = "%Y-%m-%d %H:%M:%S",
     date_modified = true,
@@ -14,11 +14,11 @@ return {
     line_separator = "------",
     use_block_header = true,
     copyright_text = {
-      "Copyright (c) 2025 zzf-12",
-      "ZZF-12",
+      "Copyright (c) 2026 timetetng",
+      "timetetng",
       "All rights reserved.",
     },
-    license_from_file = false,
-    author_from_git = false,
+    license_from_file = true,
+    author_from_git = true,
   },
 }

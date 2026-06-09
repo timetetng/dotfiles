@@ -18,3 +18,5 @@ spawn-sh-at-startup "clipse --listen"
 spawn-sh-at-startup "foot --server"
 spawn-at-startup "win11-clipboard-history --background"
 spawn-at-startup "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+// 鸣潮 Bug 遮罩自动清理守护进程
+spawn-sh-at-startup "~/.config/niri/scripts/wuwa-windows.sh &"

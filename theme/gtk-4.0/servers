@@ -73,4 +73,14 @@
       </metadata>
     </info>
   </bookmark>
+  <bookmark href="sftp://root@10.0.0.2/opt/mcsmanager/daemon/data/InstanceData/73caadb7bc534914b61d8a9cea5ca509" added="2026-05-14T17:58:35.713261Z" modified="2026-05-14T17:58:35.713264Z" visited="2026-05-14T17:58:35.713262Z">
+    <title>73caadb7bc534914b61d8a9cea5ca509</title>
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <bookmark:applications>
+          <bookmark:application name="org.gnome.Nautilus" exec="&apos;org.gnome.Nautilus %u&apos;" modified="2026-05-14T17:58:35.713263Z" count="1"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
 </xbel>
