@@ -13,16 +13,6 @@
       </metadata>
     </info>
   </bookmark>
-  <bookmark href="sftp://root@192.168.0.147/root" added="2025-11-21T12:59:49.461270Z" modified="2025-11-21T12:59:49.461277Z" visited="2025-11-21T12:59:49.461272Z">
-    <title>root</title>
-    <info>
-      <metadata owner="http://freedesktop.org">
-        <bookmark:applications>
-          <bookmark:application name="org.gnome.Nautilus" exec="&apos;org.gnome.Nautilus %u&apos;" modified="2025-11-21T12:59:49.461274Z" count="1"/>
-        </bookmark:applications>
-      </metadata>
-    </info>
-  </bookmark>
   <bookmark href="sftp://root@10.8.0.4/" added="2025-12-01T13:56:25.514912Z" modified="2025-12-01T13:56:25.514915Z" visited="2025-12-01T13:56:25.514913Z">
     <title>10.8.0.4 上的 /</title>
     <info>
@@ -39,26 +29,6 @@
       <metadata owner="http://freedesktop.org">
         <bookmark:applications>
           <bookmark:application name="org.gnome.Nautilus" exec="&apos;org.gnome.Nautilus %u&apos;" modified="2026-01-13T00:15:21.230499Z" count="1"/>
-        </bookmark:applications>
-      </metadata>
-    </info>
-  </bookmark>
-  <bookmark href="sftp://root@192.168.1.7/root" added="2026-02-13T14:50:00.412230Z" modified="2026-02-13T14:50:00.412234Z" visited="2026-02-13T14:50:00.412231Z">
-    <title>root</title>
-    <info>
-      <metadata owner="http://freedesktop.org">
-        <bookmark:applications>
-          <bookmark:application name="org.gnome.Nautilus" exec="&apos;org.gnome.Nautilus %u&apos;" modified="2026-02-13T14:50:00.412232Z" count="1"/>
-        </bookmark:applications>
-      </metadata>
-    </info>
-  </bookmark>
-  <bookmark href="sftp://xingjian@192.168.228.163:2222/home" added="2026-03-12T13:39:41.319849Z" modified="2026-03-12T13:39:41.319854Z" visited="2026-03-12T13:39:41.319850Z">
-    <title>home</title>
-    <info>
-      <metadata owner="http://freedesktop.org">
-        <bookmark:applications>
-          <bookmark:application name="org.gnome.Nautilus" exec="&apos;org.gnome.Nautilus %u&apos;" modified="2026-03-12T13:39:41.319852Z" count="1"/>
         </bookmark:applications>
       </metadata>
     </info>

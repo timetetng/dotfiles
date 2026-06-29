@@ -24,6 +24,7 @@ binds {
     Mod+O {spawn-sh "tosu-overlay -i";}
     Mod+T { spawn "quickshell" "ipc" "call" "biliBarrage" "toggle"; }
     // Suggested binds for running programs: terminal, app launcher, screen locker.
+    Mod+Return { spawn "footclient" "btop"; }
     Mod+Q hotkey-overlay-title="Open a Terminal" { spawn "footclient"; }
     Mod+Shift+Q { spawn "~/.local/bin/niri-fork-terminal.sh"; }
     Mod+R { spawn "bash" "/home/xingjian/.config/rofi/launchers/type-6/launcher.sh"; }
