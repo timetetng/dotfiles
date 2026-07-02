@@ -41,7 +41,7 @@ Variants {
         
         color: "transparent"
         exclusiveZone: -1
-        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.layer: WlrLayer.Top
 
         WlrLayershell.keyboardFocus: (root.showLauncher || root.showDashboard || root.showHub || root.showTools || root.showAudio)
             ? WlrKeyboardFocus.Exclusive 
