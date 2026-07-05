@@ -27,7 +27,7 @@ binds {
     Mod+Return { spawn "footclient" "btop"; }
     Mod+Q hotkey-overlay-title="Open a Terminal" { spawn "footclient"; }
     Mod+Shift+Q { spawn "~/.local/bin/niri-fork-terminal.sh"; }
-    Mod+R { spawn "bash" "/home/xingjian/.config/rofi/launchers/type-6/launcher.sh"; }
+    Mod+R { spawn "bash" "/home/xingjian/.config/rofi/rofi/launchers/type-6/launcher.sh"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
     Mod+S { spawn "bash" "/home/xingjian/Projects/sshtf/rofi-ssh.sh"; }
      // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
