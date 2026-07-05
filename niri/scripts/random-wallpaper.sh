@@ -1,37 +1,12 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-set -uo pipefail
+sleep 2
 
-# 配置
 WALLPAPER_DIR="${WALLPAPER_DIR:-$HOME/.config/wallpaper}"
-ROFI_THEME="${ROFI_THEME:-$HOME/dotfiles/rofi/wallpaper_2_line.rasi}"
 WH_CONF="${WALLHAVEN_CONFIG:-$HOME/.config/wallhaven.toml}"
 
-# 启动 awww 守护进程
-if ! pgrep -x "awww-daemon" >/dev/null 2>&1; then
-  awww-daemon >/dev/null 2>&1 &
-  sleep 0.25
-fi
-
-# 收集壁纸
-mapfile -t WALLS < <(find -L "$WALLPAPER_DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | grep -v "cache-niri-auto-blur-bg/" | sort)
-
-# 构建 rofi 菜单
-MENU_ITEMS=""
-for wp in "${WALLS[@]}"; do
-  name=$(basename "$wp")
-  MENU_ITEMS+="$name\0icon\x1f$wp\n"
-done
-WH_ICON="${WALLS[RANDOM % ${#WALLS[@]}]:-preferences-system}"
-MENU_ITEMS="🌐 Wallhaven 随机\0icon\x1f${WH_ICON}\n$MENU_ITEMS"
-
-ROFI_CMD=(rofi -dmenu -p "选择壁纸" -show-icons)
-[ -n "$ROFI_THEME" ] && ROFI_CMD+=(-theme "$ROFI_THEME")
-
-CHOICE=$(printf '%b' "$MENU_ITEMS" | "${ROFI_CMD[@]}")
-[ -z "$CHOICE" ] && exit 0
-
-if [ "$CHOICE" = "🌐 Wallhaven 随机" ]; then
+if [ "${1:-}" = "--wallhaven" ]; then
   proxy="${http_proxy:-${https_proxy:-http://127.0.0.1:7890}}"
   BLACKLIST="真人|写实|男性|実写|写真|写実|photography|realistic|male"
 
@@ -63,36 +38,22 @@ if [ "$CHOICE" = "🌐 Wallhaven 随机" ]; then
     bad=$(echo "$tag_names" | grep -i -E "$BLACKLIST" || true)
     [ -n "$bad" ] && continue
 
-    id=$(echo "$json" | jq -r '.data[0].id // empty')
-    ext="${path##*.}"
-    tmp="/tmp/wallhaven/$id.$ext"
-    mkdir -p /tmp/wallhaven
-    [ ! -f "$tmp" ] && curl -sL --proxy "$proxy" -o "$tmp" "$path"
-    ANGLE=$((RANDOM % 360))
-    awww img "$tmp" \
+    curl -s "$path" | awww img - \
       --transition-type "wave" \
-      --transition-angle "$ANGLE" \
+      --transition-angle "$((RANDOM % 360))" \
       --transition-duration 3 \
       --transition-fps 60 \
       --transition-bezier .43,1.19,1,.4
-    notify-send "壁纸已切换" "Wallhaven: $id" -i "$tmp"
-    bash "$HOME/dotfiles/rofi/overview.sh"
-    exit $?
+    exit 0
   done
 
-  rofi -e "Wallhaven 无符合要求的壁纸"
+  notify-send "壁纸" "Wallhaven 无符合要求的壁纸"
   exit 1
 fi
 
-# 本地壁纸
-SELECTED=""
-for wp in "${WALLS[@]}"; do
-  if [ "$(basename "$wp")" = "$CHOICE" ]; then
-    SELECTED="$wp"
-    break
-  fi
-done
-[ -z "$SELECTED" ] && { echo "未找到壁纸" >&2; exit 1; }
+mapfile -t WALLS < <(find -L "$WALLPAPER_DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | sort)
+[ ${#WALLS[@]} -eq 0 ] && exit 1
+SELECTED="${WALLS[RANDOM % ${#WALLS[@]}]}"
 
 ANGLE=$((RANDOM % 360))
 awww img "$SELECTED" \
@@ -102,5 +63,14 @@ awww img "$SELECTED" \
   --transition-fps 60 \
   --transition-bezier .43,1.19,1,.4
 
-notify-send "壁纸已切换" "$(basename "$SELECTED")" -i "$SELECTED"
-bash "$HOME/dotfiles/rofi/overview.sh"
+CACHE_DIR_OVERVIEW="$HOME/.cache/wallpaper_overview"
+CACHE_ROFI="$HOME/.cache/wallpaper_rofi"
+mkdir -p "$CACHE_DIR_OVERVIEW" "$CACHE_ROFI"
+FILENAME=$(basename "$SELECTED")
+BLURRED_OVERVIEW="$CACHE_DIR_OVERVIEW/overview_$FILENAME"
+BLURRED="$HOME/.cache/wallpaper_blur/blurred_$FILENAME"
+[ ! -f "$BLURRED_OVERVIEW" ] && magick "$SELECTED" -resize 25% -blur 0x4 -fill black -colorize 40% "$BLURRED_OVERVIEW"
+[ ! -f "$BLURRED" ] && magick "$SELECTED" -resize 25% -blur 0x4 "$BLURRED"
+awww img -n overview "$BLURRED_OVERVIEW" --transition-type fade --transition-duration 0.5
+cp -f "$SELECTED" "$CACHE_ROFI/current"
+cp -f "$BLURRED" "$CACHE_ROFI/blurred"

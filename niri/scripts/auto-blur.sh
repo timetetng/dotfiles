@@ -307,7 +307,8 @@ force_check_state() {
 log "Daemon Started (PID: $$) using backend: $WALLPAPER_BACKEND"
 
 # 开机缓存恢复逻辑 (解决重启后卡在旧模糊壁纸的问题)
-sleep 2
+# 等待 random-wallpaper.sh 的 wave 动画(3s)完成
+sleep 6
 fetch_current_wall
 if [[ -n "$_RET_WALL" ]]; then
   _START_WALL_NAME="${_RET_WALL##*/}"
