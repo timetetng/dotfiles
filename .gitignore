@@ -27,6 +27,7 @@ hyprland/waybar/scripts/toolbar_state
 # 忽略包含城市信息的用户特定文件
 hyprland/hypr/scripts/tools/weather_city.txt
 hyprland/waybar/scripts/weather_city.txt
+hyprland/waybar/scripts/tools/weather_city.txt
 
 # 忽略下载的主题和插件
 # 最好通过文档记录如何安装它们，而不是将它们提交到 git
@@ -42,7 +43,7 @@ Thumbs.db
 hyprland/hypr/wallpapers/
 
 # quickshell Bilibili消息组件cookie
-quickshell/quickshell/config/BiliConfig.qml
+quickshell/config/BiliConfig.qml
 
 ./scripts/python/.git
 ./scripts/python/.venv
@@ -50,3 +51,11 @@ quickshell/quickshell/config/BiliConfig.qml
 mpd/database
 mpd/state
 mpd/playlists
+mpd/log
+
+# oh-my-zsh 安装器备份
+zsh/.zshrc.pre-oh-my-zsh
+
+# 机器特定的系统链接和个人服务器书签
+theme/gtk-4.0/assets
+theme/gtk-4.0/servers

@@ -82,16 +82,16 @@ return {
           "jsonls",
           "yamlls",
           "dockerls",
+          "sqls", -- ✨ 星的添加：把咱们 SQL 专用的 LSP 加到自动装箱表里！
         },
-        -- ❌ 删除 automatic_installation，v2.0 已移除该选项
       })
 
       -- =====================================================
       -- 配置各 LSP
       -- =====================================================
 
-      -- 默认配置：无特殊设置的 server（html, cssls, bashls, marksman, dockerls）
-      local default_servers = { "html", "cssls", "bashls", "marksman", "dockerls" }
+      -- 默认配置：无特殊设置的 server（加上了 sqls 哦！）
+      local default_servers = { "html", "cssls", "bashls", "marksman", "dockerls", "sqls" }
       for _, server in ipairs(default_servers) do
         lspconfig[server].setup({
           capabilities = capabilities,
