@@ -16,3 +16,4 @@ file:///mnt/windows windows
 file:///home/xingjian/Projects/typst/Paper/code/outputs/reports/fft_results fft_results
 file:///home/xingjian/Videos/OBS OBS
 sftp://root@10.0.0.2/opt/mcsmanager/daemon/data/InstanceData/73caadb7bc534914b61d8a9cea5ca509 mc-server
+sftp://root@114.132.75.87/root/app/gscore-docker/gsuid_core/data/XutheringWavesUID/other/calendar calendar

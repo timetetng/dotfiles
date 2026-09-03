@@ -5,7 +5,7 @@ output "eDP-1" {
 }
 
 // 屏幕配置 B (也是直接放在最外面)
-output "HDMI-A-1" {
+output "HDMI-A-2" {
     mode "1920x1280"
     scale 1.6
     position x=1600 y=500

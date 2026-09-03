@@ -13,8 +13,13 @@ _get_blurred() {
 
 rofi_blur() {
   _get_blurred
+  local extra=()
+  if [ "${ROFI_DENIAL_FIX:-0}" = "1" ]; then
+    extra+=(-theme-str "window { width: 1500px; x-offset: -427px; y-offset: -267px; }")
+  fi
   rofi "$@" \
     -theme-str "window { background-image: url(\"$blurred\", width); }" \
     -theme-str "imagebox { background-image: none; }" \
-    -theme-str "mainbox { background-color: rgba(0, 0, 0, 0.2); }"
+    -theme-str "mainbox { background-color: rgba(0, 0, 0, 0.2); }" \
+    "${extra[@]}"
 }

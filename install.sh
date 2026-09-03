@@ -1,184 +1,171 @@
 #!/bin/bash
+set -e
 
-# Dotfiles Installation Script
-# Author: Gemini (Modified)
-# Description: Modular installer with interactive menu.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+CONFIG="$HOME/.config"
+BACKUP="$HOME/.dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
+AUR_HELPER="$(command -v yay || command -v paru || true)"
 
-set -e # Exit on error
+GREEN='\033[0;32m'; BLUE='\033[0;34m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKUP_DIR="$HOME/.dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
-CONFIG_DIR="$HOME/.config"
+items=(
+  "cava           |cava                    |$CONFIG/cava|cava"
+  "fastfetch      |fastfetch               |$CONFIG/fastfetch|fastfetch"
+  "fcitx5         |fcitx5/fcitx5           |$CONFIG/fcitx5|fcitx5-im fcitx5-chinese-addons"
+  "foot           |foot                    |$CONFIG/foot|foot"
+  "hypr           |hyprland/hypr           |$CONFIG/hypr|hyprland"
+  "hyprpanel      |hyprland/hyprpanel      |$CONFIG/hyprpanel|hyprpanel"
+  "waybar         |hyprland/waybar         |$CONFIG/waybar|waybar"
+  "kitty          |kitty/kitty             |$CONFIG/kitty|kitty"
+  "mpd            |mpd                     |$CONFIG/mpd|mpd"
+  "ncmpcpp        |ncmpcpp                 |$CONFIG/ncmpcpp|ncmpcpp"
+  "niri           |niri                    |$CONFIG/niri|niri"
+  "nvim           |nvim/nvim               |$CONFIG/nvim|neovim"
+  "quickshell     |quickshell              |$CONFIG/quickshell|quickshell"
+  "rofi           |rofi                    |$CONFIG/rofi|rofi"
+  "fontconfig     |theme/fontconfig        |$CONFIG/fontconfig|fontconfig"
+  "gtk3           |theme/gtk-3.0           |$CONFIG/gtk-3.0|gtk3"
+  "gtk4           |theme/gtk-4.0           |$CONFIG/gtk-4.0|gtk4"
+  "nwg-look       |theme/nwg-look          |$CONFIG/nwg-look|nwg-look"
+  "xsettingsd     |theme/xsettingsd        |$CONFIG/xsettingsd|xsettingsd"
+  "wlogout        |wlogout                 |$CONFIG/wlogout|wlogout"
+  "yazi           |yazi/yazi               |$CONFIG/yazi|yazi"
+  "zsh            |zsh/.zshrc              |$HOME/.zshrc|zsh"
+)
 
-# Colors for pretty printing
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+link() {
+  local src="$SCRIPT_DIR/$1" dest="$2"
+  [ -z "$1" ] && echo -e "${YELLOW}  ⚠ empty source, skip${NC}" && return
+  [ -z "$2" ] && echo -e "${YELLOW}  ⚠ empty dest, skip${NC}" && return
+  if [ ! -e "$src" ] && [ ! -L "$src" ]; then
+    echo -e "${YELLOW}  ⚠ $1 not found, skip${NC}"; return
+  fi
+  mkdir -p "$(dirname "$dest")"
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
+      echo -e "${GREEN}  ✓ $dest${NC}"; return
+    fi
+    mkdir -p "$BACKUP"; mv "$dest" "$BACKUP/"
+  fi
+  ln -s "$src" "$dest"
+  echo -e "${GREEN}  ✓${NC} $1"
+}
 
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}       Dotfiles Installer v2.0          ${NC}"
-echo -e "${BLUE}========================================${NC}"
-echo "Source: $DOTFILES_DIR"
-echo "Target: $HOME"
-echo "Backup: $BACKUP_DIR"
-echo -e "${BLUE}========================================${NC}"
+install_deps() {
+  local pkgs=($1)
+  [ ${#pkgs[@]} -eq 0 ] && return
+  local missing=()
+  for pkg in "${pkgs[@]}"; do
+    pacman -Qi "$pkg" &>/dev/null || missing+=("$pkg")
+  done
+  [ ${#missing[@]} -eq 0 ] && return
+  echo -e "  ${CYAN}installing: ${missing[*]}${NC}"
+  if [ -n "$AUR_HELPER" ]; then
+    "$AUR_HELPER" -S --needed --noconfirm "${missing[@]}"
+  else
+    sudo pacman -S --needed --noconfirm "${missing[@]}"
+  fi
+}
 
-# Ensure Config Directory exists
-mkdir -p "$CONFIG_DIR"
+install_one() {
+  local raw="${1// /}"
+  local idx=$(( raw - 1 ))
+  if [ -z "$raw" ] || [ "$raw" -lt 1 ] || [ "$raw" -gt "${#items[@]}" ]; then
+    echo -e "${YELLOW}  ⚠ invalid number: $1, skip${NC}"; return
+  fi
+  IFS='|' read -r name src dst deps <<< "${items[$idx]}"
+  name="${name// /}"; src="${src// /}"; dst="${dst// /}"
+  deps="${deps%"${deps##*[! ]}"}"
+  [ -z "$name" ] && echo -e "${YELLOW}  ⚠ empty item at #$raw, skip${NC}" && return
+  [ "$INSTALL_DEPS" = "1" ] && install_deps "$deps"
+  echo -e "\n${CYAN}[$raw] ${name}${NC}"
+  link "$src" "$dst"
 
-# --- Utility Functions ---
+  case "$name" in
+    hypr)   chmod +x "$CONFIG/hypr/scripts/"* 2>/dev/null || true ;;
+    waybar) chmod +x "$CONFIG/waybar/scripts/"* "$CONFIG/waybar/tools/"* 2>/dev/null || true ;;
+    zsh)
+      for f in aliases.zsh env.zsh functions.zsh lazyload.zsh; do
+        [ -f "$SCRIPT_DIR/zsh/$f" ] && link "zsh/$f" "$HOME/$f"
+      done
+      ;;
+  esac
+}
 
-# Usage: link_config <source_rel_path> <dest_abs_path>
-link_config() {
-  local src="$DOTFILES_DIR/$1"
-  local dest="$2"
-  local dest_dir="$(dirname "$dest")"
+list() {
+  echo -e "${BLUE}Available configs:${NC}"
+  for i in "${!items[@]}"; do
+    IFS='|' read -r name _ _ <<< "${items[$i]}"
+    name="${name// /}"
+    printf "  %2d) %s\n" $((i+1)) "$name"
+  done
+  echo "  a) all"
+}
 
-  # Check if source exists
-  if [ ! -e "$src" ]; then
-    echo -e "${YELLOW}⚠️  Warning: Source '$1' does not exist. Skipping...${NC}"
+interactive() {
+  if [ ! -t 0 ]; then
+    echo -e "${YELLOW}Warning: stdin is not a TTY. Installing all configs.${NC}"
+    for i in "${!items[@]}"; do install_one $((i+1)); done
     return
   fi
-
-  # Create destination parent directory if it doesn't exist
-  if [ ! -d "$dest_dir" ]; then
-    echo "📂 Creating directory: $dest_dir"
-    mkdir -p "$dest_dir"
+  list
+  echo -e "${BLUE}Enter numbers (space/comma/hyphen like 1-5), 'a'll, or 'q':${NC}"
+  read -r input || true
+  [ "$input" = "q" ] && exit 0
+  if [ "$input" = "a" ]; then
+    for i in "${!items[@]}"; do install_one $((i+1)); done; return
   fi
-
-  # Handle existing destination
-  if [ -e "$dest" ] || [ -L "$dest" ]; then
-    local current_link
-    if [ -L "$dest" ]; then
-      current_link="$(readlink "$dest")"
-      if [ "$current_link" == "$src" ]; then
-        echo -e "${GREEN}✅ Already linked: $dest${NC}"
-        return
-      fi
-    fi
-
-    echo "📦 Backing up existing $dest..."
-    mkdir -p "$BACKUP_DIR"
-    local backup_path="$BACKUP_DIR/$(basename "$dest")_$(date +%s)"
-    mv "$dest" "$backup_path"
+  local nums=()
+  IFS=' ,' read -ra parts <<< "$input"
+  for part in "${parts[@]}"; do
+    if [[ "$part" =~ ^([0-9]+)-([0-9]+)$ ]]; then
+      for ((j=${BASH_REMATCH[1]}; j<=${BASH_REMATCH[2]}; j++)); do nums+=("$j"); done
+    elif [[ "$part" =~ ^[0-9]+$ ]]; then nums+=("$part"); fi
+  done
+  if [ "${#nums[@]}" -eq 0 ]; then
+    echo -e "${YELLOW}No valid numbers entered, nothing to install.${NC}"; return
   fi
-
-  # Create symlink
-  echo "🔗 Linking $src -> $dest"
-  ln -s "$src" "$dest"
+  local seen=()
+  for n in "${nums[@]}"; do
+    local skip=0
+    for s in "${seen[@]}"; do [ "$s" = "$n" ] && skip=1 && break; done
+    [ "$skip" -eq 1 ] && continue
+    seen+=("$n")
+    install_one "$n"
+  done
 }
 
-# --- Module Functions ---
+echo -e "${BLUE}════════════════════════════════════${NC}"
+echo -e "${BLUE}  dotfiles installer${NC}"
+echo -e "${BLUE}  from: $SCRIPT_DIR${NC}"
+echo -e "${BLUE}  backup: $BACKUP${NC}"
+echo -e "${BLUE}════════════════════════════════════${NC}"
+mkdir -p "$CONFIG"
 
-install_shell() {
-  echo -e "\n${BLUE}👉 Installing Shell & Terminal Configs (Zsh, Kitty, Fastfetch)...${NC}"
-  link_config "fastfetch" "$CONFIG_DIR/fastfetch"
-  link_config "kitty/kitty" "$CONFIG_DIR/kitty"
-  link_config "zsh/.zshrc" "$HOME/.zshrc"
-  # Optional: check if oh-my-zsh exists before linking custom folder
-  if [ -d "$HOME/.oh-my-zsh" ]; then
-    link_config "zsh/.oh-my-zsh" "$HOME/.oh-my-zsh"
-  else
-    echo -e "${YELLOW}⚠️  Oh-My-Zsh not found in $HOME, skipping .oh-my-zsh link.${NC}"
-  fi
-}
-
-install_wm() {
-  echo -e "\n${BLUE}👉 Installing Window Manager (Hyprland, Waybar, Niri)...${NC}"
-  link_config "hyprland/hypr" "$CONFIG_DIR/hypr"
-  link_config "hyprland/hyprpanel" "$CONFIG_DIR/hyprpanel"
-  link_config "hyprland/waybar" "$CONFIG_DIR/waybar"
-  link_config "niri" "$CONFIG_DIR/niri"
-
-  echo "🔒 Setting executable permissions for WM scripts..."
-  chmod +x "$CONFIG_DIR/hypr/scripts/"* 2>/dev/null || true
-  chmod +x "$CONFIG_DIR/waybar/scripts/"* 2>/dev/null || true
-  chmod +x "$CONFIG_DIR/waybar/tools/"* 2>/dev/null || true
-}
-
-install_tools() {
-  echo -e "\n${BLUE}👉 Installing Tools (Nvim, Yazi, Fcitx5)...${NC}"
-  link_config "nvim/nvim" "$CONFIG_DIR/nvim"
-  link_config "yazi/yazi" "$CONFIG_DIR/yazi"
-  link_config "fcitx5/fcitx5" "$CONFIG_DIR/fcitx5"
-}
-
-install_theme() {
-  echo -e "\n${BLUE}👉 Installing Themes (GTK, Fonts, etc)...${NC}"
-  link_config "theme/fontconfig" "$CONFIG_DIR/fontconfig"
-  link_config "theme/gtk-3.0" "$CONFIG_DIR/gtk-3.0"
-  link_config "theme/gtk-4.0" "$CONFIG_DIR/gtk-4.0"
-  link_config "theme/nwg-look" "$CONFIG_DIR/nwg-look"
-  link_config "theme/xsettingsd" "$CONFIG_DIR/xsettingsd"
-}
-
-install_all() {
-  install_shell
-  install_wm
-  install_tools
-  install_theme
-}
-
-# --- Main Logic ---
-
-usage() {
-  echo -e "${BLUE}Please select an installation option:${NC}"
-  echo "1) 🚀 Install EVERYTHING (Recommended)"
-  echo "2) 🐚 Shell Only (Zsh, Kitty, Fastfetch)"
-  echo "3) 🖼️  Window Manager Only (Hyprland, Waybar...)"
-  echo "4) 🛠️  Tools Only (Nvim, Yazi, Fcitx5)"
-  echo "5) 🎨 Theme Only (GTK, Fontconfig)"
-  echo "q) ❌ Quit"
-}
-
-# Allow -y or --yes flag for non-interactive full install
-if [[ "$1" == "-y" || "$1" == "--yes" ]]; then
-  install_all
-  exit 0
-fi
-
-while true; do
-  usage
-  read -p "Select option [1-5/q]: " choice
-  case $choice in
-  1)
-    install_all
-    break
-    ;;
-  2)
-    install_shell
-    break
-    ;;
-  3)
-    install_wm
-    break
-    ;;
-  4)
-    install_tools
-    break
-    ;;
-  5)
-    install_theme
-    break
-    ;;
-  q | Q)
-    echo "Exiting..."
-    exit 0
-    ;;
-  *) echo -e "${YELLOW}Invalid option, please try again.${NC}" ;;
+INSTALL_DEPS=0
+opts=()
+for arg in "$@"; do
+  case "$arg" in
+    -d|--deps) INSTALL_DEPS=1 ;;
+    *) opts+=("$arg") ;;
   esac
 done
+set -- "${opts[@]}"
 
-echo -e "\n${BLUE}========================================${NC}"
-echo -e "${GREEN}✅ Installation process finished!${NC}"
-if [ -d "$BACKUP_DIR" ]; then
-  # Check if backup directory is empty
-  if [ -z "$(ls -A "$BACKUP_DIR")" ]; then
-    rmdir "$BACKUP_DIR"
-  else
-    echo -e "📦 Backups saved to: ${YELLOW}$BACKUP_DIR${NC}"
+case "${1:-}" in
+  -y|--yes)     for i in "${!items[@]}"; do install_one $((i+1)); done ;;
+  -l|--list)    list; exit 0 ;;
+  -c|--configs) shift; IFS=',' read -ra nums <<< "$1"
+                for n in "${nums[@]}"; do install_one "$n"; done ;;
+  -h|--help)    echo "Usage: $0 [-d] [-y] [-l] [-c N,N]"; list; exit 0 ;;
+  "")           [ "$INSTALL_DEPS" = "1" ] && for i in "${!items[@]}"; do install_one $((i+1)); done
+                [ "$INSTALL_DEPS" = "0" ] && interactive ;;
+  *)            echo -e "${YELLOW}Unknown: $1${NC}"; exit 1 ;;
+esac
+
+if [ -d "$BACKUP" ]; then
+  if [ -z "$(ls -A "$BACKUP")" ]; then rmdir "$BACKUP"
+  else echo -e "\n${YELLOW}Backups: $BACKUP${NC}"
   fi
 fi
-echo -e "${YELLOW}⚠️  Note: Restart shell or logout/login for changes to take effect.${NC}"
-echo -e "${BLUE}========================================${NC}"
+echo -e "${GREEN}Done.${NC}"

@@ -31,6 +31,8 @@ window-rule {
     match title="画中画"
     match title="图片和视频"
     match title="视频播放器"
+    match app-id="imv"
+    match app-id="mpv"
     open-floating true
 }
 

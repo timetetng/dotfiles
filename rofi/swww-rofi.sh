@@ -27,6 +27,36 @@ MENU_ITEMS="🌐 Wallhaven 随机\0icon\x1f${WH_ICON}\n$MENU_ITEMS"
 
 ROFI_CMD=(rofi -dmenu -p "选择壁纸" -show-icons)
 [ -n "$ROFI_THEME" ] && ROFI_CMD+=(-theme "$ROFI_THEME")
+if [ "${ROFI_DENIAL_FIX:-0}" = "1" ]; then
+  ROFI_CMD+=(-theme-str "window { x-offset: -427px; y-offset: -267px; }")
+fi
+
+# 在 Denial 下把壁纸写入 Denial 的壁纸状态文件，shell 会自动应用
+denial_set_wallpaper() {
+  local img="$1"
+  local state="${XDG_STATE_HOME:-$HOME/.local/state}/denial/wallpaper"
+  mkdir -p "$(dirname "$state")"
+  if [ -f "$state" ] && grep -q '^{' "$state" 2>/dev/null; then
+    python3 -c '
+import json, sys
+p, img = sys.argv[1], sys.argv[2]
+try:
+    d = json.load(open(p))
+except Exception:
+    d = {}
+d["version"] = 5
+d["all"] = "file:" + img
+d.setdefault("horizontalAlignment", "center")
+d.setdefault("verticalAlignment", "center")
+d.setdefault("alignmentX", 0.0)
+d.setdefault("alignmentY", 0.0)
+d.setdefault("darkness", 0.0)
+json.dump(d, open(p, "w"))
+' "$state" "$img"
+  else
+    printf 'file:%s\n' "$img" > "$state"
+  fi
+}
 
 CHOICE=$(printf '%b' "$MENU_ITEMS" | "${ROFI_CMD[@]}")
 [ -z "$CHOICE" ] && exit 0
@@ -65,18 +95,22 @@ if [ "$CHOICE" = "🌐 Wallhaven 随机" ]; then
 
     id=$(echo "$json" | jq -r '.data[0].id // empty')
     ext="${path##*.}"
-    tmp="/tmp/wallhaven/$id.$ext"
-    mkdir -p /tmp/wallhaven
-    [ ! -f "$tmp" ] && curl -sL --proxy "$proxy" -o "$tmp" "$path"
-    ANGLE=$((RANDOM % 360))
-    awww img "$tmp" \
-      --transition-type "wave" \
-      --transition-angle "$ANGLE" \
-      --transition-duration 3 \
-      --transition-fps 60 \
-      --transition-bezier .43,1.19,1,.4
-    notify-send "壁纸已切换" "Wallhaven: $id" -i "$tmp"
-    bash "$HOME/dotfiles/rofi/overview.sh"
+    dest="$HOME/Pictures/Wallpapers/wallhaven-$id.$ext"
+    mkdir -p "$HOME/Pictures/Wallpapers"
+    [ ! -f "$dest" ] && curl -sL --proxy "$proxy" -o "$dest" "$path"
+    if [ "${ROFI_DENIAL_FIX:-0}" = "1" ]; then
+      denial_set_wallpaper "$dest"
+    else
+      ANGLE=$((RANDOM % 360))
+      awww img "$dest" \
+        --transition-type "wave" \
+        --transition-angle "$ANGLE" \
+        --transition-duration 3 \
+        --transition-fps 60 \
+        --transition-bezier .43,1.19,1,.4
+    fi
+    notify-send "壁纸已切换" "Wallhaven: $id" -i "$dest"
+    [ "${ROFI_DENIAL_FIX:-0}" = "1" ] || bash "$HOME/dotfiles/rofi/overview.sh"
     exit $?
   done
 
@@ -94,13 +128,17 @@ for wp in "${WALLS[@]}"; do
 done
 [ -z "$SELECTED" ] && { echo "未找到壁纸" >&2; exit 1; }
 
-ANGLE=$((RANDOM % 360))
-awww img "$SELECTED" \
-  --transition-type "wave" \
-  --transition-angle "$ANGLE" \
-  --transition-duration 3 \
-  --transition-fps 60 \
-  --transition-bezier .43,1.19,1,.4
+if [ "${ROFI_DENIAL_FIX:-0}" = "1" ]; then
+  denial_set_wallpaper "$SELECTED"
+else
+  ANGLE=$((RANDOM % 360))
+  awww img "$SELECTED" \
+    --transition-type "wave" \
+    --transition-angle "$ANGLE" \
+    --transition-duration 3 \
+    --transition-fps 60 \
+    --transition-bezier .43,1.19,1,.4
+fi
 
 notify-send "壁纸已切换" "$(basename "$SELECTED")" -i "$SELECTED"
-bash "$HOME/dotfiles/rofi/overview.sh"
+[ "${ROFI_DENIAL_FIX:-0}" = "1" ] || bash "$HOME/dotfiles/rofi/overview.sh"
