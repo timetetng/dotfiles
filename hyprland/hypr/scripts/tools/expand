@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 TEMP=/tmp/current_wall
 
-files=(~/.config/hypr/wallpapers/*)
+files=(~/Pictures/wallpapers/*)
 
 hypr=~/.config/hypr
 scripts=$hypr/scripts

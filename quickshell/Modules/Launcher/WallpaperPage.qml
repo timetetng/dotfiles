@@ -10,7 +10,7 @@ Item {
     
     signal requestCloseLauncher()
 
-    property string wallpaperPath: Quickshell.env("HOME") + "/.config/wallpaper"
+    property string wallpaperPath: Quickshell.env("HOME") + "/Pictures/wallpapers"
     
     property string currentSelectedPreview: ""
     property bool isLoading: true

@@ -3,7 +3,7 @@ set -euo pipefail
 
 sleep 2
 
-WALLPAPER_DIR="${WALLPAPER_DIR:-$HOME/.config/wallpaper}"
+WALLPAPER_DIR="${WALLPAPER_DIR:-$HOME/Pictures/wallpapers}"
 WH_CONF="${WALLHAVEN_CONFIG:-$HOME/.config/wallhaven.toml}"
 
 if [ "${1:-}" = "--wallhaven" ]; then

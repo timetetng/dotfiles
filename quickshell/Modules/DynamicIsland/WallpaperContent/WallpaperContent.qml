@@ -9,7 +9,7 @@ Item {
     id: root
     signal wallpaperChanged()
 
-    property string wallpaperPath: "/home/xingjian/.config/wallpaper"
+    property string wallpaperPath: Quickshell.env("HOME") + "/Pictures/wallpapers"
     property var allWallpapers: [] 
     
     ListModel { id: wallpaperModel }

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-WALLPAPER_DIR="$HOME/.config/wallpaper"
+WALLPAPER_DIR="$HOME/Pictures/wallpapers"
 WH_CONF="${WALLHAVEN_CONFIG:-$HOME/.config/wallhaven.toml}"
 
 if [ "${1:-}" = "--wallhaven" ]; then

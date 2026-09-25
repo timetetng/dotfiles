@@ -3,7 +3,7 @@
 set -uo pipefail
 
 # 配置
-WALLPAPER_DIR="${WALLPAPER_DIR:-$HOME/.config/wallpaper}"
+WALLPAPER_DIR="${WALLPAPER_DIR:-$HOME/Pictures/wallpapers}"
 ROFI_THEME="${ROFI_THEME:-$HOME/dotfiles/rofi/wallpaper_2_line.rasi}"
 WH_CONF="${WALLHAVEN_CONFIG:-$HOME/.config/wallhaven.toml}"
 
@@ -95,8 +95,8 @@ if [ "$CHOICE" = "🌐 Wallhaven 随机" ]; then
 
     id=$(echo "$json" | jq -r '.data[0].id // empty')
     ext="${path##*.}"
-    dest="$HOME/Pictures/Wallpapers/wallhaven-$id.$ext"
-    mkdir -p "$HOME/Pictures/Wallpapers"
+    dest="$HOME/Pictures/wallpapers/wallhaven-$id.$ext"
+    mkdir -p "$HOME/Pictures/wallpapers"
     [ ! -f "$dest" ] && curl -sL --proxy "$proxy" -o "$dest" "$path"
     if [ "${ROFI_DENIAL_FIX:-0}" = "1" ]; then
       denial_set_wallpaper "$dest"
