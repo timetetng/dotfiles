@@ -71,15 +71,5 @@ return {
     },
   },
 
-  -- ===========================================
-  -- 3. 语法高亮支持
-  -- ===========================================
-  {
-    "nvim-treesitter/nvim-treesitter",
-    opts = function(_, opts)
-      if type(opts.ensure_installed) == "table" then
-        vim.list_extend(opts.ensure_installed, { "typst" })
-      end
-    end,
-  },
+  -- 语法高亮 parser 已在 ui.lua 的 install 列表中注册（"typst"）
 }

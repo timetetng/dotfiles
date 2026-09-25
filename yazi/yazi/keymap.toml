@@ -116,8 +116,8 @@ prepend_keymap = [
   # =======================
   # 光标移动
   # =======================
-  { on = "i", run = "arrow prev", desc = "上一个文件" },
-  { on = "k", run = "arrow next", desc = "下一个文件" },
+  { on = "k", run = "arrow prev", desc = "上一个文件" },
+  { on = "j", run = "arrow next", desc = "下一个文件" },
   { on = "<Up>",   run = "arrow prev", desc = "上一个文件" },
   { on = "<Down>", run = "arrow next", desc = "下一个文件" },
   { on = "<C-i>", run = "arrow -50%",  desc = "向上移动半页" },
@@ -135,7 +135,7 @@ prepend_keymap = [
   # =======================
   # 目录导航
   # =======================
-  { on = "j", run = "leave", desc = "返回上级目录" },
+  { on = "h", run = "leave", desc = "返回上级目录" },
   { on = "l", run = "enter", desc = "进入子目录" },
   { on = "<Left>",  run = "leave", desc = "返回上级目录" },
   #{ on = "<Right>", run = "enter", desc = "进入子目录" },

@@ -51,9 +51,9 @@ local themes = {
     name = "catppuccin",
     config = function()
       require("catppuccin").setup({
-        flavour = "macchiato", -- 可选: "latte", "frappe", "macchiato", "mocha"
-        background = { light = "latte", dark = "macchiato" },
-        transparent_background = true,
+        flavour = "mocha", -- 可选: "latte", "frappe", "macchiato", "mocha"
+        background = { light = "latte", dark = "mocha" },
+        transparent_background = false,
         term_colors = true,
         styles = {
           comments = { "italic" },

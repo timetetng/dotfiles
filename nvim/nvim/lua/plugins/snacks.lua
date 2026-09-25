@@ -1,3 +1,14 @@
+-- kitty 图形协议终端检测（kitty/ghostty/wezterm）
+local function graphics_ok()
+  local e = vim.env
+  if e.KITTY_WINDOW_ID or e.GHOSTTY_RESOURCES_DIR or e.WEZTERM_PANE then
+    return true
+  end
+  local t = ((e.TERM or "") .. " " .. (e.TERM_PROGRAM or "")):lower()
+  return t:find("kitty") ~= nil or t:find("ghostty") ~= nil or t:find("wezterm") ~= nil
+end
+vim.g.snacks_image_supported = graphics_ok()
+
 return {
   "folke/snacks.nvim",
   priority = 1000,
@@ -54,6 +65,12 @@ return {
     scope = { enabled = true },
     dashboard = { enabled = true },
     input = { enabled = true },
+
+    -- 仅在支持图形协议的终端渲染图片/公式；否则 foot 等会弹出空白浮窗
+    image = {
+      enabled = vim.g.snacks_image_supported,
+      math = { enabled = vim.g.snacks_image_supported },
+    },
   },
 
   keys = {

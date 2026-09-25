@@ -37,7 +37,7 @@ Variants {
             right: true
         }
         implicitHeight: Screen.height 
-        margins { top: -52 } 
+        margins { top: 0 } 
         
         color: "transparent"
         exclusiveZone: -1

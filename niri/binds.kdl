@@ -11,10 +11,10 @@ binds {
 
     // Mod-Shift-/, which is usually the same as Mod-?,
     // shows a list of important hotkeys.
-    Mod+P { spawn "quickshell" "ipc" "call" "lock" "open"; }
-    Mod+Shift+D { spawn "quickshell" "ipc" "call" "island" "dashboard"; }
-    Mod+D { spawn "quickshell" "ipc" "call" "island" "hub"; }
-    Mod+Shift+T { spawn "quickshell" "ipc" "call" "island" "tools"; }
+    Mod+P { spawn "qs" "-p" "/home/xingjian/Projects/clavis" "ipc" "call" "lock" "open"; }
+    Mod+Shift+D { spawn "qs" "-p" "/home/xingjian/Projects/clavis" "ipc" "call" "keystone" "dashboard"; }
+    Mod+D { spawn "qs" "-p" "/home/xingjian/Projects/clavis" "ipc" "call" "keystone" "hub"; }
+    Mod+Shift+T { spawn "qs" "-p" "/home/xingjian/Projects/clavis" "ipc" "call" "keystone" "tools"; }
     Mod+A { spawn "footclient" "ncmpcpp"; }
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+C {spawn "bash" "/home/xingjian/dotfiles/rofi/swww-rofi.sh";}
@@ -22,10 +22,11 @@ binds {
     Mod+M { quit; }
     Mod+E { spawn "firefox"; }
     Mod+O {spawn-sh "tosu-overlay -i";}
-    Mod+T { spawn "quickshell" "ipc" "call" "biliBarrage" "toggle"; }
+    Mod+T { spawn "qs" "-p" "/home/xingjian/Projects/clavis" "ipc" "call" "spotlight" "toggle"; }
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Return { spawn "footclient" "btop"; }
     Mod+Q hotkey-overlay-title="Open a Terminal" { spawn "footclient"; }
+    Alt+Q hotkey-overlay-title="Open a Kitty Terminal" { spawn "kitty"; }
     Mod+Shift+Q { spawn "~/.local/bin/niri-fork-terminal.sh"; }
     Mod+R { spawn "bash" "/home/xingjian/.config/rofi/rofi/launchers/type-6/launcher.sh"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
@@ -62,7 +63,7 @@ binds {
     // or do a four-finger swipe up on a touchpad.
     Mod+Tab repeat=false { toggle-overview; }
 
-    Mod+W repeat=false { close-window; }
+    Mod+W repeat=false { spawn-sh "niri msg action close-window; ~/.local/bin/stop_ww"; }
 
     Mod+Left  { focus-column-left; }
     Mod+Down  { focus-window-down; }
@@ -85,8 +86,8 @@ binds {
     // the first or last window in a column.
     // Mod+J     { focus-window-or-workspace-down; }
     // Mod+K     { focus-window-or-workspace-up; }
-    // Mod+Ctrl+J     { move-window-down-or-to-workspace-down; }
-    // Mod+Ctrl+K     { move-window-up-or-to-workspace-up; }
+    //Mod+J     { move-window-down-or-to-workspace-down; }
+    //Mod+K     { move-window-up-or-to-workspace-up; }
 
     Mod+Home { focus-column-first; }
     Mod+End  { focus-column-last; }
@@ -261,9 +262,9 @@ binds {
     // Mod+Shift+Space { switch-layout "prev"; }
 
     Print { screenshot; }
-    Ctrl+Print { screenshot-screen; }
-    Ctrl+Alt+A { screenshot; }
-    Ctrl+Alt+Shift+A { screenshot-window; }
+    Ctrl+Print hotkey-overlay-title="截取当前屏幕" { screenshot-screen; }
+    Alt+Print hotkey-overlay-title="截取当前窗口" { screenshot-window; }
+    Ctrl+Alt+A hotkey-overlay-title="长截图" { spawn "wayscrollshot"; }
 
     // Applications such as remote-desktop clients and software KVM switches may
     // request that niri stops processing the keyboard shortcuts defined here

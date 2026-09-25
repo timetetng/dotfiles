@@ -1,13 +1,2 @@
-layout{
-    focus-ring{
-        active-gradient from="#ffb4abcc" to="#e0c38ccc" angle=135
-        urgent-color "#ffb4ab"
-
-        }
-}
-recent-windows {    
-    highlight {
-        active-color "#423735"
-        urgent-color "#ffb4ab"
-    }
-}
+// focus-ring + recent-windows highlight are now managed dynamically
+// by Clavis in clavis/highlight.kdl (see matugen config.toml).

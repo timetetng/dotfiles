@@ -1,17 +1,24 @@
 output "eDP-1" {
     mode "2560x1600"
-    scale 1.6
+    scale 1.3
     position x=0 y=0
 }
 
-// 屏幕配置 B (也是直接放在最外面)
+// 屏幕配置 B (竖屏，放在笔记本左侧)
 output "HDMI-A-2" {
     mode "1920x1280"
-    scale 1.6
-    position x=1600 y=500
+    scale 1.4
+    transform "270"
+    // 旋转后逻辑尺寸 914x1371，右边缘贴住 eDP-1 的左边缘 (x=0)
+    // 顶边与主屏($1230高)对齐 y=0；想竖直居中改 y=-70
+    position x=-914 y=0
 }
 
-layer-rule{
-    match namespace="awww-daemonoverview"
+// Overview 背景：指向 clavis 的 overview 层（纯 QML 渲染当前桌布，自动模糊），
+// 替代已废弃的独立 awww-daemon -n overview
+// Overview 背景：指向 clavis 的 overview 层（纯 QML 渲染当前桌布，自动模糊）
+// 替代已废弃的独立 awww-daemon -n overview
+layer-rule {
+    match namespace="^clavis-overview-wallpaper$"
      place-within-backdrop true
 }

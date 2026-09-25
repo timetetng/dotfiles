@@ -57,9 +57,7 @@ vim.opt.iskeyword:append("-")
 
 -- 💠 自定义高亮函数：适配 Nordic 风格
 local function apply_custom_highlights()
-  -- 1. 设置透明补全菜单 (Pmenu)
-  vim.api.nvim_set_hl(0, "NormalFloat", { bg = "NONE" }) -- 浮窗背景透明
-  vim.api.nvim_set_hl(0, "Pmenu", { bg = "NONE", blend = 0 }) -- 补全菜单背景透明
+  -- 1. 不透明补全菜单 (Pmenu)
   
   -- 2. 补全菜单选中项：使用 Nord 的青色(nord7)或浅蓝(nord8)，文字设为深色
   vim.api.nvim_set_hl(0, "PmenuSel", { bg = C.nord8, fg = C.nord0, bold = true }) 

@@ -125,9 +125,6 @@ input {
 // Find more information on the wiki:
 // https://yalter.github.io/niri/Configuration:-Layout
 layout {
-    // Make the workspace background transparent so the Overview background shows through.
-    background-color "transparent"
-
     // Set gaps around windows in logical pixels.
     gaps 8
 
@@ -174,7 +171,8 @@ layout {
 
     // You can change how the focus ring looks.
     focus-ring {
-        off
+        // Uncomment this line to disable the focus ring.
+        // off
 
         // How many logical pixels the ring extends out from the windows.
         width 4
@@ -232,7 +230,8 @@ layout {
 
     // You can enable drop shadows for windows.
     shadow {
-        on
+        // Uncomment the next line to enable shadows.
+        // on
 
         // By default, the shadow draws only around its window, and not behind it.
         // Uncomment this setting to make the shadow draw behind its window.
@@ -254,17 +253,16 @@ layout {
         // pixels and match the CSS box-shadow properties.
 
         // Softness controls the shadow blur radius.
-        softness 35
+        softness 30
 
         // Spread expands the shadow.
-        spread 3
+        spread 5
 
         // Offset moves the shadow relative to the window.
-        offset x=0 y=8
+        offset x=0 y=5
 
         // You can also change the shadow color and opacity.
         color "#0007"
-        inactive-color "#0007"
     }
 
     // Struts shrink the area occupied by windows, similarly to layer-shell panels.
@@ -379,23 +377,3 @@ debug {
 }
 
 prefer-no-csd
-
-// 背景模糊全局参数 (26.04)
-blur {
-	passes 3
-	offset 3.0
-	noise 0.02
-	saturation 1.5
-}
-
-// BEGIN CLAVIS CURSOR
-include optional=true "clavis/cursor.kdl"
-// END CLAVIS CURSOR
-
-// BEGIN CLAVIS EFFECTS
-include optional=true "clavis/effects.kdl"
-// END CLAVIS EFFECTS
-
-// BEGIN CLAVIS HIGHLIGHT
-include optional=true "clavis/highlight.kdl"
-// END CLAVIS HIGHLIGHT
