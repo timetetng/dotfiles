@@ -42,6 +42,9 @@ Thumbs.db
 # quickshell Bilibili消息组件cookie
 quickshell/config/BiliConfig.qml
 
+# 指向外部仓库的软链接
+quickshell/clavis
+
 ./scripts/python/.git
 ./scripts/python/.venv
 
