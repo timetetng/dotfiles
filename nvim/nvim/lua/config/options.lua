@@ -78,6 +78,15 @@ local function apply_custom_highlights()
 
   -- 5. 增强注释可见度（如果觉得默认还是太灰）
   vim.api.nvim_set_hl(0, "Comment", { fg = "#7B88A1", italic = true })
+
+  -- 6. 光标跟随终端薄荷绿，文字用背景色反色
+  local bg = vim.api.nvim_get_hl(0, { name = "Normal" }).bg or "#1e1e2e"
+  local teal = { bg = "#A7F3D0", fg = bg }
+  vim.api.nvim_set_hl(0, "Cursor", teal)
+  vim.api.nvim_set_hl(0, "CursorI", teal)
+  vim.api.nvim_set_hl(0, "CursorIM", teal)
+  vim.api.nvim_set_hl(0, "CursorNI", teal)
+  vim.api.nvim_set_hl(0, "CursorColumn", { bg = bg })
 end
 
 -- 当主题加载或切换时自动应用

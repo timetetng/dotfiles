@@ -2,6 +2,8 @@ return {
   "sphamba/smear-cursor.nvim",
   -- 确保在 UI 加载时启动
   lazy = false,
+  -- 暂时完全禁用，排查残影问题
+  cond = false,
   opts = {
     -- ==========================================
     -- 光标尾迹与动画物理效果配置
