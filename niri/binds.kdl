@@ -17,7 +17,7 @@ binds {
     Mod+Shift+T { spawn "qs" "-p" "/home/xingjian/Projects/clavis" "ipc" "call" "keystone" "tools"; }
     Mod+A { spawn "footclient" "ncmpcpp"; }
     Mod+Shift+Slash { show-hotkey-overlay; }
-    Mod+C {spawn "bash" "/home/xingjian/dotfiles/rofi/swww-rofi.sh";}
+    Mod+C { spawn "qs" "-p" "/home/xingjian/Projects/clavis" "ipc" "call" "spotlight" "openMode" "wallpapers"; }
     Mod+G { spawn "nautilus"; }
     Mod+M { quit; }
     Mod+E { spawn "firefox"; }
@@ -26,7 +26,7 @@ binds {
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Return { spawn "footclient" "btop"; }
     Mod+Q hotkey-overlay-title="Open a Terminal" { spawn "footclient"; }
-    Alt+Q hotkey-overlay-title="Open a Kitty Terminal" { spawn "kitty"; }
+    Alt+Q hotkey-overlay-title="Open a Kitty Terminal" { spawn-sh "prime-run kitty"; }
     Mod+Shift+Q { spawn "~/.local/bin/niri-fork-terminal.sh"; }
     Mod+R { spawn "bash" "/home/xingjian/.config/rofi/rofi/launchers/type-6/launcher.sh"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }

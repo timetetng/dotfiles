@@ -11,4 +11,5 @@ export CLAVIS_KEY="$HOME/.local/bin/key"
 export PATH="$HOME/.local/bin:$PATH"
 
 # -p 让 clavis 作为独立配置实例运行；-n 防止重复实例
-exec qs -p "$HOME/Projects/clavis" -n
+# prime-run 强制用 NVIDIA 渲染，避免核显渲染时灵动岛歌词态掉到 ~15fps
+exec prime-run qs -p "$HOME/Projects/clavis" -n
