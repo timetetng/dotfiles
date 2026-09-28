@@ -4,6 +4,8 @@
 require("config.options")
 require("config.keymaps")
 require("config.lazy")
+-- 中英混排：实时补空格 + 保存时整篇排版（markdown/typst/tex）
+require("config.cjk")
 -- 启用 OSC 52 剪贴板提供程序
 vim.g.clipboard = {
   name = "OSC 52",

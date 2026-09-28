@@ -59,3 +59,6 @@ zsh/.zshrc.pre-oh-my-zsh
 # 机器特定的系统链接和个人服务器书签
 theme/gtk-4.0/assets
 theme/gtk-4.0/servers
+
+# 忽略 nvim 下 dsh 视觉路由的截图缓存（工具运行时自动生成）
+nvim/nvim/.dsh-vision-router/
