@@ -4,6 +4,8 @@
 require("config.options")
 require("config.keymaps")
 require("config.lazy")
+-- typst 笔记：数学区判定 + 自动下标 + 包裹/预览快捷键
+require("config.typst")
 -- 中英混排：实时补空格 + 保存时整篇排版（markdown/typst/tex）
 require("config.cjk")
 -- 启用 OSC 52 剪贴板提供程序
