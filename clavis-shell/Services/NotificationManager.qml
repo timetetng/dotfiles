@@ -112,6 +112,12 @@ Singleton {
         onNotification: (notification) => {
             notification.tracked = true;
 
+            // 应用级静音（ui-preferences.json 的 mutedApps）
+            if (UiPreferences.isAppMuted(notification.appName || notification.desktopEntry || "")) {
+                notification.dismiss();
+                return;
+            }
+
             const now = Date.now();
             const replaceKey = root.replaceKeyForNotification(notification);
             root.removeNotificationsByReplaceKey(replaceKey);
@@ -125,7 +131,7 @@ Singleton {
                 "appName": notification.appName || notification.desktopEntry || qsTr("系统"),
                 "body": notification.body || "",
                 "image": notification.image || "",
-                "isTransient": notification.hints ? notification.hints.transient : false,
+                "isTransient": notification.hints && notification.hints.transient !== undefined ? notification.hints.transient : false,
                 "replaceKey": replaceKey,
                 "summary": notification.summary || notification.appName || qsTr("通知"),
                 "time": now,

@@ -120,6 +120,7 @@ Item {
         visible: opacity > 0
         image: root.notificationObject ? root.notificationObject.image : ""
         appIcon: root.notificationObject ? root.notificationObject.appIcon : ""
+        appName: root.notificationObject ? root.notificationObject.appName : ""
         summary: root.notificationObject ? root.notificationObject.summary : ""
         urgency: root.notificationUrgency
         anchors.right: background.left

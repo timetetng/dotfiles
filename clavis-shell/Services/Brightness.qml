@@ -13,6 +13,8 @@ Singleton {
     property var pendingDdcMonitors: []
     property real fallbackBrightnessValue: 0.5
     property var monitors: []
+    property var backlightDevices: []
+    property bool backlightReady: false
     property string focusedScreenName: ""
     readonly property var activeScreen: root.getScreenByName(root.focusedScreenName) || (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null)
     readonly property var activeMonitor: root.getMonitorByName(root.focusedScreenName) || (root.monitors.length > 0 ? root.monitors[0] : null)
@@ -42,6 +44,13 @@ Singleton {
             }));
 
         root.monitors = next;
+
+        if (!root.backlightReady) {
+            if (!backlightDetectProcess.running)
+                backlightDetectProcess.running = true;
+            return;
+        }
+
         root.rescanDdcMonitors();
     }
 
@@ -108,8 +117,38 @@ Singleton {
         const safeVal = root.clampBrightness(val, allowZero);
         const pct = Math.round(safeVal * 100);
         fallbackBrightnessValue = safeVal;
-        fallbackSetProc.exec(["brightnessctl", "--class", "backlight", "s", pct + "%", "--quiet"]);
+        fallbackSetProc.exec(root.brightnessctlCommand(root.pickBacklightForConnector(root.focusedScreenName), ["s", pct + "%", "--quiet"]));
         root.brightnessChanged();
+    }
+
+    function parseBacklightDevice(line) {
+        const parts = String(line || "").trim().split("|");
+        if (parts.length < 2 || parts[0].length === 0)
+            return;
+
+        const next = root.backlightDevices.slice();
+        next.push({ name: parts[0], path: parts[1] });
+        root.backlightDevices = next;
+    }
+
+    // 按 DRM connector 匹配背光设备：intel_backlight 的路径里带 card1-eDP-1
+    function pickBacklightForConnector(connector) {
+        const name = root.normalizeConnectorName(connector);
+        if (name.length === 0)
+            return "";
+
+        const hit = root.backlightDevices.find(d => d.path.indexOf("-" + name + "/") >= 0 || d.path.endsWith("-" + name));
+        return hit ? hit.name : "";
+    }
+
+    // device 为空时退回 brightnessctl 自己的默认选择
+    function brightnessctlCommand(device, args) {
+        const cmd = ["brightnessctl"];
+        if (device && device.length > 0)
+            cmd.push("-d", device);
+        else
+            cmd.push("--class", "backlight");
+        return cmd.concat(args);
     }
 
     function rescanDdcMonitors() {
@@ -147,6 +186,21 @@ Singleton {
         if (index >= root.monitors.length)
             return;
         root.monitors[index].initialize();
+    }
+
+    Process {
+        id: backlightDetectProcess
+
+        command: ["sh", "-c", "for d in /sys/class/backlight/*; do [ -e \"$d\" ] || continue; printf '%s|%s\\n' \"$(basename \"$d\")\" \"$(readlink -f \"$d\")\"; done"]
+
+        stdout: SplitParser {
+            onRead: line => root.parseBacklightDevice(line)
+        }
+
+        onExited: {
+            root.backlightReady = true;
+            root.rescanDdcMonitors();
+        }
     }
 
     Process {
@@ -209,6 +263,7 @@ Singleton {
             readonly property string screenName: screen ? screen.name : ""
             property bool isDdc: false
             property string busNum: ""
+            property string backlightDevice: ""
             property int rawMaxBrightness: 100
             property real brightness: root.fallbackBrightnessValue
             property bool ready: false
@@ -238,6 +293,7 @@ Singleton {
                 const match = root.ddcMonitors.find(m => root.normalizeConnectorName(m.name) === connectorName);
                 isDdc = !!match;
                 busNum = match ? match.busNum : "";
+                backlightDevice = root.pickBacklightForConnector(connectorName);
                 refresh();
             }
 
@@ -246,7 +302,7 @@ Singleton {
                 if (isDdc)
                     readProcess.command = ["ddcutil", "-b", busNum, "getvcp", "10", "--brief"];
                 else
-                    readProcess.command = ["brightnessctl", "--class", "backlight", "-m"];
+                    readProcess.command = root.brightnessctlCommand(backlightDevice, ["-m"]);
                 readProcess.running = true;
             }
 
@@ -300,7 +356,7 @@ Singleton {
                 }
 
                 const percent = Math.round(safeBrightness * 100);
-                setProcess.exec(["brightnessctl", "--class", "backlight", "s", percent + "%", "--quiet"]);
+                setProcess.exec(root.brightnessctlCommand(backlightDevice, ["s", percent + "%", "--quiet"]));
             }
 
             readonly property Process readProcess: Process {

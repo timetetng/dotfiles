@@ -170,6 +170,7 @@ MouseArea {
                 Layout.alignment: Qt.AlignTop
                 image: root.multipleNotifications || root.notificationCount === 0 ? "" : root.notifications[0].image
                 appIcon: root.notificationGroup ? root.notificationGroup.appIcon : ""
+                appName: root.notificationGroup ? root.notificationGroup.appName : ""
                 summary: root.notificationCount > 0 ? root.notifications[root.notificationCount - 1].summary : ""
                 urgency: root.notifications.some((notif) => root.isCriticalUrgency(notif.urgency))
                     ? NotificationUrgency.Critical.toString()

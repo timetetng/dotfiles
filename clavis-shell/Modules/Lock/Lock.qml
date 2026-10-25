@@ -87,8 +87,10 @@ Scope {
             config: "password.conf"
 
             onPamMessage: {
-                if (this.responseRequired)
+                if (this.responseRequired) {
+                    console.log("[lock-debug] respond len=" + internalContext.currentText.length);
                     this.respond(internalContext.currentText);
+                }
             }
 
             onCompleted: result => {

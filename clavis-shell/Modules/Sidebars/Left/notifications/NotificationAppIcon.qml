@@ -4,11 +4,13 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.Notifications
 import qs.Common
+import qs.Services
 
 Item {
     id: root
 
     property string appIcon: ""
+    property string appName: ""
     property string summary: ""
     property string image: ""
     property string urgency: NotificationUrgency.Normal.toString()
@@ -20,11 +22,13 @@ Item {
     readonly property string cleanFileAppIcon: appIcon.startsWith("/") ? "file://" + appIcon : appIcon
     readonly property bool hasImage: image !== "" && !image.startsWith("icon:")
     readonly property bool hasAppIcon: appIcon !== ""
-    readonly property string appIconSource: !hasAppIcon ? "" : appIconIsFile ? cleanFileAppIcon : resolvedIconSource(appIcon)
+    readonly property string resolvedIcon: ApplicationService.resolveAppIcon(appName, appIcon)
+    readonly property bool iconResolvable: resolvedIcon !== ""
+    readonly property string appIconSource: !iconResolvable ? "" : (resolvedIcon.startsWith("/") || resolvedIcon.startsWith("file://")) ? resolvedIcon : Quickshell.iconPath(resolvedIcon, "")
     readonly property bool showImage: hasImage && imageLoaded && !imageLoadFailed
     readonly property bool showFallback: !showImage
-    readonly property bool showAppIcon: showFallback && hasAppIcon && !appIconLoadFailed
-    readonly property bool showSymbol: showFallback && (!hasAppIcon || appIconLoadFailed)
+    readonly property bool showAppIcon: showFallback && iconResolvable && !appIconLoadFailed
+    readonly property bool showSymbol: showFallback && (!iconResolvable || appIconLoadFailed)
     readonly property real materialIconSize: implicitWidth * 0.6
     readonly property real appIconSize: implicitWidth * 0.8
     readonly property real smallAppIconSize: implicitWidth * 0.42
@@ -135,13 +139,13 @@ Item {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 color: Appearance.colors.colLayer4
-                visible: root.hasAppIcon
+                visible: root.iconResolvable
 
                 Loader {
                     anchors.centerIn: parent
                     width: 13
                     height: 13
-                    active: root.hasAppIcon && !root.appIconLoadFailed
+                    active: root.iconResolvable && !root.appIconLoadFailed
                     sourceComponent: smallAppIconComponent
                 }
             }

@@ -31,7 +31,8 @@ Item {
             color: "transparent"
 
             readonly property string imageSource: modelData && modelData.image ? modelData.image : ""
-            readonly property string appIconSource: modelData && modelData.appIcon ? Quickshell.iconPath(modelData.appIcon, "image-missing") : ""
+            readonly property string appIconName: modelData ? ApplicationService.resolveAppIcon(modelData.appName, modelData.appIcon) : ""
+            readonly property string appIconSource: appIconName === "" ? "" : (appIconName.startsWith("/") || appIconName.startsWith("file://")) ? appIconName : Quickshell.iconPath(appIconName, "")
             readonly property string iconSource: imageSource !== "" ? imageSource : appIconSource
             readonly property bool hasImage: imageSource !== ""
             readonly property bool hasIcon: iconSource !== ""

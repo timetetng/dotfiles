@@ -10,6 +10,8 @@ Singleton {
     readonly property string configDir: Paths.configHome
     readonly property string filePath: configDir + "/ui-preferences.json"
     property bool dndEnabled: false
+    // 通知静音：按应用名（不区分大小写）过滤，不弹窗也不进历史
+    property var mutedApps: []
     property bool darkMode: false
     property string language: normalizedLanguage(Qt.locale().name)
     property string weatherTemperatureUnit: "celsius"
@@ -42,6 +44,24 @@ Singleton {
             return "zh_TW";
 
         return "zh_CN";
+    }
+
+    function isAppMuted(appName) {
+        const name = String(appName || "").trim().toLowerCase();
+        if (name === "")
+            return false;
+        return root.mutedApps.some((entry) => String(entry).trim().toLowerCase() === name);
+    }
+
+    function setAppMuted(appName, muted) {
+        const name = String(appName || "").trim();
+        if (name === "")
+            return;
+        const next = root.mutedApps.filter((entry) => String(entry).trim().toLowerCase() !== name.toLowerCase());
+        if (muted)
+            next.push(name);
+        root.mutedApps = next;
+        root.save();
     }
 
     function setDndEnabled(value) {
@@ -234,6 +254,7 @@ Singleton {
         root.savePending = false;
         prefsFile.setText(JSON.stringify({
             "dndEnabled": root.dndEnabled,
+            "mutedApps": root.mutedApps,
             "language": root.language,
             "weatherTemperatureUnit": root.weatherTemperatureUnit,
             "systemTemperatureUnit": root.systemTemperatureUnit,
@@ -281,6 +302,10 @@ Singleton {
                 const parsed = JSON.parse(prefsFile.text().trim() || "{}");
                 if (typeof parsed.dndEnabled === "boolean")
                     root.dndEnabled = parsed.dndEnabled;
+
+                root.mutedApps = Array.isArray(parsed.mutedApps)
+                    ? parsed.mutedApps.filter((name) => typeof name === "string" && name.trim() !== "")
+                    : [];
 
                 root.language = root.normalizedLanguage(parsed.language || Qt.locale().name);
                 root.weatherTemperatureUnit = root.normalizedTemperatureUnit(parsed.weatherTemperatureUnit);

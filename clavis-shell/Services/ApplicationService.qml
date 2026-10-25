@@ -92,6 +92,43 @@ Singleton {
         return root.iconSource("");
     }
 
+    // 通知/托盘里拿到的 appIcon 经常是空的或不存在的名字：
+    // 先用它本身，失败则按 appName 去 .desktop 里找图标
+    function resolveAppIcon(appName, iconName) {
+        const direct = String(iconName || "");
+        if (direct.startsWith("/") || direct.startsWith("file://"))
+            return direct;
+        if (direct !== "" && Quickshell.hasThemeIcon(direct))
+            return direct;
+
+        const name = String(appName || "").trim();
+        if (name === "")
+            return "";
+
+        const lower = name.toLowerCase();
+        const ids = [name, name + ".desktop", lower, lower + ".desktop"];
+        for (const id of ids) {
+            const application = root.findById(id);
+            if (application && application.icon && Quickshell.hasThemeIcon(application.icon))
+                return application.icon;
+        }
+
+        const heuristic = DesktopEntries.heuristicLookup(name);
+        if (heuristic && heuristic.icon && Quickshell.hasThemeIcon(heuristic.icon))
+            return heuristic.icon;
+
+        for (const application of root.applications) {
+            const title = String(application.name || "").toLowerCase();
+            const execBase = String(application.execString || application.exec || "").trim().split(/\s+/)[0];
+            const base = execBase.substring(execBase.lastIndexOf("/") + 1).toLowerCase();
+            if ((title === lower || base === lower)
+                    && application.icon && Quickshell.hasThemeIcon(application.icon)) {
+                return application.icon;
+            }
+        }
+        return "";
+    }
+
     Connections {
         target: DesktopEntries
 

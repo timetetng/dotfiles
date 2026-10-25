@@ -32,13 +32,14 @@ Rectangle {
         if (notificationObject.image && notificationObject.image !== "")
             return normalizeSource(notificationObject.image);
 
-        if (notificationObject.appIcon && notificationObject.appIcon !== "") {
-            if (notificationObject.appIcon.startsWith("/") || notificationObject.appIcon.startsWith("file://"))
-                return normalizeSource(notificationObject.appIcon);
-
-            return Quickshell.iconPath(notificationObject.appIcon, "image-missing");
-        }
-        return "";
+        if (!notificationObject)
+            return "";
+        const resolved = ApplicationService.resolveAppIcon(notificationObject.appName, notificationObject.appIcon);
+        if (resolved === "")
+            return "";
+        if (resolved.startsWith("/") || resolved.startsWith("file://"))
+            return normalizeSource(resolved);
+        return Quickshell.iconPath(resolved, "");
     }
 
     function formatTime(timestamp) {

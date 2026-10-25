@@ -16,6 +16,8 @@ RippleButton {
     readonly property bool isSeparator: !root.entryAvailable || root.menuEntry.isSeparator === true
     readonly property string entryIcon: root.entryAvailable ? (root.menuEntry.icon || "") : ""
     readonly property bool hasIcon: entryIcon.length > 0
+                                     && (entryIcon.startsWith("/") || entryIcon.startsWith("file://")
+                                         || Quickshell.hasThemeIcon(entryIcon))
     readonly property int entryButtonType: root.entryAvailable && root.menuEntry.buttonType !== undefined ? root.menuEntry.buttonType : QsMenuButtonType.None
     readonly property bool hasSpecialInteraction: entryButtonType !== QsMenuButtonType.None
     readonly property int entryCheckState: root.entryAvailable ? root.menuEntry.checkState : Qt.Unchecked
