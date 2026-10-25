@@ -10,6 +10,7 @@ spawn-at-startup "awww-daemon" "--layer" "background" "--namespace" "clavis-desk
 //spawn-sh-at-startup "awww-daemon -n overview"
 // XWayland: niri 内置支持，会自动拉起 xwayland-satellite :0，此手动 spawn 冗余
 //spawn-at-startup "xwayland-satellite"
+spawn-sh-at-startup "~/.config/niri/scripts/gnome-keyring.sh"
 spawn-sh-at-startup "~/.config/niri/scripts/quickshell-clavis.sh"
 // spawn-at-startup "~/.config/niri/scripts/random-wallpaper.sh --wallhaven"   // 壁纸统一走 Clavis
 spawn-at-startup "~/.config/niri/scripts/auto-blur.sh"
