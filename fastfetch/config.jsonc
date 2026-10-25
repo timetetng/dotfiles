@@ -9,13 +9,18 @@
       "left": 2
     },
     "color": {
-      "1": "magenta",
-      "2": "cyan"
+      "1": "#95D5B2",
+      "2": "#40916C"
     }
   },
   "display": {
     "separator": " │ ",
-    "color": "magenta",
+    "color": {
+      "keys": "#74C69D",
+      "title": "#95D5B2",
+      "output": "#D8F3DC",
+      "separator": "#40916C"
+    },
     "size": {
       "binaryPrefix": "si",
       "ndigits": 2
@@ -29,10 +34,10 @@
       "type": "custom",
       "format": "╭──────────╮" // 技巧：删掉 key，直接在这里加空格对齐
     },
-    // 用户名 (使用 command 模块获取单独的用户名)
+    // 用户名
     {
       "type": "command",
-      "key": "│  user  ",
+      "key": "│  user  ",
       "text": "whoami"
     },
     // 运行时间
@@ -43,7 +48,7 @@
     // 发行版
     {
       "type": "os",
-      "key": "│  distro"
+      "key": "│  distro"
     },
     // 内核
     {
@@ -54,22 +59,23 @@
     // 窗口管理器
     {
       "type": "wm",
-      "key": "│  wm    "
+      "key": "│  wm    "
     },
     // 终端
     {
-      "type": "terminal",
-      "key": "│  term  "
+      "type": "command",
+      "key": "│  term  ",
+      "text": "echo $TERM"
     },
     // Shell
     {
       "type": "shell",
-      "key": "│  shell "
+      "key": "│  shell "
     },
-    // CPU
+    // 编辑器
     {
       "type": "editor",
-      "key": "│  Editor"
+      "key": "│  Editor"
     },
     // 磁盘
     {
@@ -89,10 +95,10 @@
       "type": "custom",
       "format": "├──────────┤"
     },
-    // 颜色圆点 (使用 colors 模块，并将符号设为圆圈)
+    // 颜色圆点
     {
       "type": "colors",
-      "key": "│  colors",
+      "key": "│  colors",
       "symbol": "circle"
     },
     {

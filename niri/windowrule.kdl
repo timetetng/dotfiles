@@ -95,3 +95,27 @@ window-rule {
 
 
 
+
+layer-rule {
+    match namespace="^clavis-overview-wallpaper$"
+    place-within-backdrop true
+}
+
+// babry 截图选区（Slint 普通窗口，需全屏浮层化）
+window-rule {
+    match app-id="babry"
+    open-floating true
+    open-fullscreen true
+    opacity 1.0
+    geometry-corner-radius 0
+    clip-to-geometry false
+    border {
+        off
+    }
+    focus-ring {
+        off
+    }
+    background-effect {
+        blur false
+    }
+}

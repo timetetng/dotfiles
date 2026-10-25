@@ -1,14 +1,16 @@
 # dotfiles
 
-个人 Linux 桌面配置。覆盖 Hyprland / Niri 双窗口管理器、QuickShell QML 面板、Neovim、Zsh、Kitty 等。
+个人 Linux 桌面配置。覆盖 Hyprland / Niri 双窗口管理器、QuickShell QML 面板、Neovim、fish、Zsh、Kitty 等。
 
 ## 配置清单
 
 | 条目 | 路径 | 说明 |
 |------|------|------|
 | cava | `~/.config/cava` | 音频可视化 |
+| clavis | `~/.config/clavis` | Clavis 锁屏/面板运行时配置（JSON） |
 | fastfetch | `~/.config/fastfetch` | 系统信息 |
 | fcitx5 | `~/.config/fcitx5` | 输入法框架（Rime） |
+| fish | `~/.config/fish` | fish shell 配置与提示符 |
 | foot | `~/.config/foot` | 轻量终端 |
 | hypr | `~/.config/hypr` | Hyprland 窗口管理器核心 |
 | hyprpanel | `~/.config/hyprpanel` | HyprPanel 面板 |

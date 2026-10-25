@@ -288,6 +288,11 @@ layout {
 // This line starts waybar, a commonly used bar for Wayland compositors.
 //spawn-at-startup "waybar"
 
+// 输入法
+spawn-at-startup "fcitx5" "-d"
+// Clavis 桌面壳（prime-run + QML 环境在脚本里）
+spawn-sh-at-startup "bash /home/xingjian/.config/niri/scripts/quickshell-clavis.sh"
+
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 

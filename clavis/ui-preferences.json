@@ -1,0 +1,268 @@
+{
+  "dndEnabled": false,
+  "language": "zh_CN",
+  "weatherTemperatureUnit": "celsius",
+  "systemTemperatureUnit": "celsius",
+  "useTwelveHourClock": true,
+  "sidebarClockStyle": "digital",
+  "sidebarCookieSides": 14,
+  "sidebarCookieConstantlyRotate": false,
+  "sidebarCookieHourMarks": false,
+  "sidebarCookieTimeIndicators": true,
+  "sidebarCookieDialStyle": "full",
+  "sidebarCookieHourHandStyle": "fill",
+  "sidebarCookieMinuteHandStyle": "medium",
+  "sidebarCookieSecondHandStyle": "dot",
+  "sidebarCookieDateStyle": "bubble",
+  "drawerGridLayout": {
+    "version": 7,
+    "tiles": [
+      {
+        "id": "battery",
+        "column": 2,
+        "row": 0
+      },
+      {
+        "id": "wifi",
+        "column": 0,
+        "row": 3
+      },
+      {
+        "id": "calendar",
+        "column": 0,
+        "row": 5
+      },
+      {
+        "id": "weather",
+        "column": 1,
+        "row": 5
+      }
+    ]
+  },
+  "systemCards": {
+    "version": 3,
+    "globalDesktopLayoutMode": "free",
+    "cards": {
+      "time": {
+        "enabled": true,
+        "container": "desktop",
+        "screenName": "eDP-1",
+        "sidebar": {
+          "column": 0,
+          "row": 0
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.06874325482478416,
+            "yNorm": 0.12291201259138912
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      },
+      "battery": {
+        "enabled": true,
+        "container": "sidebar",
+        "screenName": "",
+        "sidebar": {
+          "column": 2,
+          "row": 0
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      },
+      "cpu": {
+        "enabled": true,
+        "container": "desktop",
+        "screenName": "eDP-1",
+        "sidebar": {
+          "column": 0,
+          "row": 2
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.9228034535297105,
+            "yNorm": 0.7124703493095045
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      },
+      "gpu": {
+        "enabled": true,
+        "container": "desktop",
+        "screenName": "eDP-1",
+        "sidebar": {
+          "column": 1,
+          "row": 2
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.9228034535297105,
+            "yNorm": 0.8521941510966693
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      },
+      "memoryUsed": {
+        "enabled": true,
+        "container": "desktop",
+        "screenName": "eDP-1",
+        "sidebar": {
+          "column": 2,
+          "row": 2
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.9228034535297105,
+            "yNorm": 0.5575215272136474
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      },
+      "wifi": {
+        "enabled": true,
+        "container": "sidebar",
+        "screenName": "",
+        "sidebar": {
+          "column": 0,
+          "row": 3
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      },
+      "network": {
+        "enabled": true,
+        "container": "desktop",
+        "screenName": "eDP-1",
+        "sidebar": {
+          "column": 1,
+          "row": 3
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.7416558849669883,
+            "yNorm": 0.7076472380178717
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      },
+      "storage": {
+        "enabled": true,
+        "container": "desktop",
+        "screenName": "eDP-1",
+        "sidebar": {
+          "column": 0,
+          "row": 4
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.6627414931437279,
+            "yNorm": 0.8521939733956135
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      },
+      "calendar": {
+        "enabled": true,
+        "container": "sidebar",
+        "screenName": "",
+        "sidebar": {
+          "column": 0,
+          "row": 5
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      },
+      "weather": {
+        "enabled": true,
+        "container": "sidebar",
+        "screenName": "",
+        "sidebar": {
+          "column": 1,
+          "row": 5
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      },
+      "media": {
+        "enabled": true,
+        "container": "desktop",
+        "screenName": "eDP-1",
+        "sidebar": {
+          "column": 0,
+          "row": 7
+        },
+        "desktop": {
+          "placementSpace": "screen",
+          "screen": {
+            "xNorm": 0.8415439309294058,
+            "yNorm": 0.18498679935012186
+          },
+          "wallpaper": {
+            "xNorm": 0.5,
+            "yNorm": 0.5
+          }
+        }
+      }
+    }
+  }
+}

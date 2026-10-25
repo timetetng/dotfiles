@@ -1,5 +1,7 @@
-// Managed by Clavis.
+// Managed by Clavis. Manual edits will be replaced.
+// This file is included from the user-owned Niri config.
+
 cursor {
-    xcursor-theme "default";
-    xcursor-size 39;
-};
+    xcursor-theme "Adwaita"
+    xcursor-size 24
+}

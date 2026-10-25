@@ -10,8 +10,10 @@ GREEN='\033[0;32m'; BLUE='\033[0;34m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; N
 
 items=(
   "cava           |cava                    |$CONFIG/cava|cava"
+  "clavis         |clavis                  |$CONFIG/clavis|quickshell"
   "fastfetch      |fastfetch               |$CONFIG/fastfetch|fastfetch"
   "fcitx5         |fcitx5/fcitx5           |$CONFIG/fcitx5|fcitx5-im fcitx5-chinese-addons"
+  "fish           |fish                    |$CONFIG/fish|fish"
   "foot           |foot                    |$CONFIG/foot|foot"
   "hypr           |hyprland/hypr           |$CONFIG/hypr|hyprland"
   "hyprpanel      |hyprland/hyprpanel      |$CONFIG/hyprpanel|hyprpanel"

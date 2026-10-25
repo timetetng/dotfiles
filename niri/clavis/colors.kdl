@@ -1,0 +1,15 @@
+// Clavis keeps the workspace and overview backgrounds transparent so that
+// Quickshell wallpaper surfaces and Niri X-Ray effects remain visible.
+layout {
+    focus-ring {
+        active-gradient from="#83d5c5cc" to="#abcae5cc" angle=135
+        urgent-color "#ffb4ab"
+    }
+}
+
+recent-windows {
+    highlight {
+        active-color "#343b39"
+        urgent-color "#ffb4ab"
+    }
+}
