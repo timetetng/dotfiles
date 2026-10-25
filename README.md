@@ -8,6 +8,7 @@
 |------|------|------|
 | cava | `~/.config/cava` | 音频可视化 |
 | clavis | `~/.config/clavis` | Clavis 锁屏/面板运行时配置（JSON） |
+| clavis-shell | `~/Projects/clavis` | Clavis QML 桌面壳源码（快照，不含 build/） |
 | fastfetch | `~/.config/fastfetch` | 系统信息 |
 | fcitx5 | `~/.config/fcitx5` | 输入法框架（Rime） |
 | fish | `~/.config/fish` | fish shell 配置与提示符 |
