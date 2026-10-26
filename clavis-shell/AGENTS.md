@@ -123,3 +123,39 @@ Python compileall、CMake configure/build 和 CTest。它不得 install、sudo�
 启动持久后台服务。默认不安装、不重启进程、不提交；只有用户明确要求时才执行这些
 外部操作。不得编辑 `build/`、用户 Niri 配置、系统 Qt import 根或已安装文件来修复
 源码。
+
+## 本机环境（xingjian 的 arch，2026-10-26）
+
+这份仓库在本机是**实跑**的桌面壳，不是只读快照。改动前先读这节，别把下面这些
+"看起来像 bug"的东西当 bug 改掉。
+
+### 启动方式
+- 启动脚本 `~/.config/niri/scripts/quickshell-clavis.sh`，niri 里 spawn：
+  `prime-run qs -p ~/Projects/clavis -n`
+- **必须走 prime-run（NVIDIA RTX 3050）**。核显渲染时灵动岛歌词态掉到 ~15fps，
+  机主明确不接受，别"优化"成核显。
+- 脚本里有一个看门狗循环：qs 退出后 1 秒自动重启；若会话仍锁定
+  （`loginctl show-session <id> -p LockedHint`）则补 `qs ipc -p ... call lock open`；
+  连崩 10 次放弃，稳定跑过 60 秒计数清零。
+- 重载 Clavis：`pkill qs`（看门狗会拉回）。彻底停掉：`pkill -f quickshell-clavis.sh`。
+
+### 锁屏 / suspend（重要）
+- 锁屏走 `WlSessionLock`（ext-session-lock）。**niri 一旦锁定，锁屏界面只属于
+  当初申请锁的那个客户端**；客户端死了 niri 不会解锁，只会剩一个没有表面的锁定态
+  （屏幕上是一整片主题色红，就是 `colLayer0Base`）。
+- 历史事故：suspend/resume 后 qs 退出，日志里最后一行是
+  `eglSwapBuffers failed with 0x3000` —— prime-run 的 EGL 上下文随 dGPU 掉电被销毁。
+  已做的缓解：
+  1. `/etc/modprobe.d/nvidia-power-management.conf`：`NVreg_PreserveVideoMemoryAllocations=1`
+     ＋ `NVreg_TemporaryFilePath=/var/tmp`（`/tmp` 是 4G tmpfs，放不下 4G VRAM），
+     `nvidia-suspend/resume.service` 已 enable。长睡眠有效，短间隔连续挂起仍会丢。
+  2. 看门狗自动重启 + 补锁（见上）。
+  3. 锁屏期间重启的实例**抓不到桌面快照**，抓到的只会是锁屏画面本身，所以重启时
+     `CLAVIS_LOCK_NO_SNAPSHOT=1` 让 `LockWarmup.qml` 直接放弃快照；
+     `LockSurface.qml` 背景退回 `WallpaperService.currentWallpaper`。
+- 改了 `LockSurface.qml` / `LockWarmup.qml` 的背景逻辑，别再退回"没快照就显示纯色"。
+
+### 未决
+- suspend 偶发 6~9 秒自醒（`pm_wakeup_irq=9`，ACPI SCI），怀疑 2.4G 无线接收器；
+  记录器 `/usr/lib/systemd/system-sleep/50-log-wake` → `/var/lib/pm-wake/wake.log`
+  （记 suspend 前后 GPE/SCI 计数差）。

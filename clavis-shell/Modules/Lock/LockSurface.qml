@@ -30,6 +30,10 @@ WlSessionLockSurface {
     readonly property real compactRadius: compactSize / 4
     readonly property real panelRadius: Sizes.lockCardRadiusLarge * 1.5
     readonly property string snapshotSource: LockSnapshot.snapshotUrl(root.screen)
+    // 锁屏期间 Clavis 被重启时拿不到桌面快照（ScreencopyView 抓不到已锁定的画面），
+    // 此时退回当前壁纸，避免露出 colLayer0Base 的整屏主题色
+    readonly property string fallbackWallpaper: WallpaperService.currentWallpaper
+    readonly property string backgroundSource: snapshotSource !== "" ? snapshotSource : fallbackWallpaper
     readonly property bool snapshotReady: snapshotSource !== "" && desktopSnapshotFallback.status === Image.Ready
     readonly property bool canStartStartupAnimation: snapshotReady || startupFallbackElapsed
 
@@ -70,11 +74,11 @@ WlSessionLockSurface {
     Image {
         id: desktopSnapshotFallback
         anchors.fill: parent
-        source: root.snapshotSource
+        source: root.backgroundSource
         fillMode: Image.Stretch
         asynchronous: false
         cache: false
-        visible: root.snapshotSource !== ""
+        visible: root.backgroundSource !== ""
 
         layer.enabled: true
         layer.effect: MultiEffect {

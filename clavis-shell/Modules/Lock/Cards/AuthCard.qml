@@ -140,7 +140,7 @@ FocusScope {
                     cursorVisible: false
                     echoMode: TextInput.Password
                     inputMethodHints: Qt.ImhSensitiveData | Qt.ImhHiddenText
-                                      | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
+                                      | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhLatinOnly
                     onActiveFocusChanged: cursorVisible = false
                     onCursorVisibleChanged: if (cursorVisible) cursorVisible = false
 
@@ -151,8 +151,6 @@ FocusScope {
                     }
 
                     onTextChanged: {
-                        console.log("[lock-debug] typed len=" + text.length
-                                    + " hex=" + Array.from(text).map(c => c.charCodeAt(0).toString(16)).join(","));
                         // 锁屏只收 ASCII：挡住输入法/中文/全角字符
                         if (/[^\x20-\x7E]/.test(text)) {
                             const cleaned = text.replace(/[^\x20-\x7E]/g, "");

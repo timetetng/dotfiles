@@ -88,7 +88,6 @@ Scope {
 
             onPamMessage: {
                 if (this.responseRequired) {
-                    console.log("[lock-debug] respond len=" + internalContext.currentText.length);
                     this.respond(internalContext.currentText);
                 }
             }
@@ -112,6 +111,12 @@ Scope {
         id: sessionLock
 
         signal unlock()
+
+        onLockedChanged: {
+            // Keep password entry out of Fcitx's Chinese preedit mode.
+            if (locked)
+                Quickshell.execDetached(["fcitx5-remote", "-c"]);
+        }
 
         LockSurface {
             lock: sessionLock

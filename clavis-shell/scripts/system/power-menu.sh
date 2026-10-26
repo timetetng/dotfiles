@@ -64,9 +64,9 @@ case "$style" in
     row)
         layout="$asset_dir/layout_1"
         template="$asset_dir/style_1.css"
-        columns=6
-        export margin=$((screen_height * 28 / 100))
-        export hoverMargin=$((screen_height * 23 / 100))
+        columns=5
+        export margin=$((screen_height * 40 / 100))
+        export hoverMargin=$((screen_height * 37 / 100))
         ;;
     *)
         layout="$asset_dir/layout_2"

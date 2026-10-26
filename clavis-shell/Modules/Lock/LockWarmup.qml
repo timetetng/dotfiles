@@ -71,6 +71,13 @@ Variants {
         }
 
         function startSnapshot(snapshotGeneration) {
+            // 会话已经锁定时才启动的实例抓不到桌面，只会抓到锁屏画面本身（红屏），
+            // 由启动脚本用 CLAVIS_LOCK_NO_SNAPSHOT=1 通知这里放弃快照，退回壁纸
+            if (Quickshell.env("CLAVIS_LOCK_NO_SNAPSHOT") === "1") {
+                finishWithoutSnapshot(snapshotGeneration);
+                return;
+            }
+
             warmupCapture.captureSource = null;
             activeGeneration = snapshotGeneration;
             waitingForFrame = true;
