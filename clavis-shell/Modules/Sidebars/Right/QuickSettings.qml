@@ -14,34 +14,20 @@ Item {
         case "idle":
         case "audio":
         case "microphone":
+        case "powerProfile":
         case "settings":
             return WidgetState.qsView;
         default:
             return "settings";
         }
     }
-    readonly property var activeViewLoader: activeView === "network"
-        ? networkLoader
-        : activeView === "bluetooth"
-            ? bluetoothLoader
-            : activeView === "idle"
-                ? idleLoader
-                : activeView === "audio"
-                    ? audioLoader
-                    : activeView === "microphone"
-                        ? microphoneLoader : settingsLoader
-    readonly property bool readyForPresentation:
-        activeViewLoader.active
-            && activeViewLoader.status === Loader.Ready
-            && activeViewLoader.item !== null
-            && displayedView === activeView
+    readonly property var activeViewLoader: activeView === "network" ? networkLoader : activeView === "bluetooth" ? bluetoothLoader : activeView === "idle" ? idleLoader : activeView === "audio" ? audioLoader : activeView === "microphone" ? microphoneLoader : activeView === "powerProfile" ? powerProfileLoader : settingsLoader
+    readonly property bool readyForPresentation: activeViewLoader.active && activeViewLoader.status === Loader.Ready && activeViewLoader.item !== null && displayedView === activeView
 
     function syncDisplayedView() {
-        if (activeViewLoader.active
-                && activeViewLoader.status === Loader.Ready
-                && activeViewLoader.item !== null) {
+        if (activeViewLoader.active && activeViewLoader.status === Loader.Ready && activeViewLoader.item !== null)
             displayedView = activeView;
-        }
+
     }
 
     Component.onCompleted: syncDisplayedView()
@@ -66,6 +52,7 @@ Item {
                 root.syncDisplayedView();
             }
         }
+
     }
 
     PageTransitionLayer {
@@ -87,6 +74,7 @@ Item {
                 root.syncDisplayedView();
             }
         }
+
     }
 
     PageTransitionLayer {
@@ -108,6 +96,7 @@ Item {
                 root.syncDisplayedView();
             }
         }
+
     }
 
     PageTransitionLayer {
@@ -129,6 +118,7 @@ Item {
                 root.syncDisplayedView();
             }
         }
+
     }
 
     PageTransitionLayer {
@@ -150,6 +140,29 @@ Item {
                 root.syncDisplayedView();
             }
         }
+
+    }
+
+    PageTransitionLayer {
+        anchors.fill: parent
+        active: root.displayedView === "powerProfile"
+        transitionsEnabled: root.foreground
+
+        Loader {
+            id: powerProfileLoader
+
+            property bool loadedOnce: false
+
+            anchors.fill: parent
+            active: root.activeView === "powerProfile" || loadedOnce
+            asynchronous: true
+            sourceComponent: powerProfileComponent
+            onLoaded: {
+                loadedOnce = true;
+                root.syncDisplayedView();
+            }
+        }
+
     }
 
     PageTransitionLayer {
@@ -172,6 +185,7 @@ Item {
                 root.syncDisplayedView();
             }
         }
+
     }
 
     Component {
@@ -180,6 +194,7 @@ Item {
         NetworkContent {
             foreground: root.foreground && root.activeView === "network"
         }
+
     }
 
     Component {
@@ -188,6 +203,7 @@ Item {
         BluetoothContent {
             foreground: root.foreground && root.activeView === "bluetooth"
         }
+
     }
 
     Component {
@@ -196,6 +212,7 @@ Item {
         IdleContent {
             foreground: root.foreground && root.activeView === "idle"
         }
+
     }
 
     Component {
@@ -204,6 +221,7 @@ Item {
         AudioContent {
             foreground: root.foreground && root.activeView === "audio"
         }
+
     }
 
     Component {
@@ -212,6 +230,16 @@ Item {
         MicrophoneContent {
             foreground: root.foreground && root.activeView === "microphone"
         }
+
+    }
+
+    Component {
+        id: powerProfileComponent
+
+        PowerProfileContent {
+            foreground: root.foreground && root.activeView === "powerProfile"
+        }
+
     }
 
     Component {
@@ -220,5 +248,7 @@ Item {
         SettingsContent {
             screen: root.screen
         }
+
     }
+
 }
