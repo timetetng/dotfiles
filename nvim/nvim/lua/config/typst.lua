@@ -1,66 +1,21 @@
 -- ============================================================
 -- typst 数学笔记：数学区判定 + 包裹/快捷输入 + 预览快捷键
---   数学区判定用 treesitter（typst parser 已装），带 changedtick 缓存，
---   供 snippets 的 condition/show_condition 与插入模式自动下标使用。
+--   输入与上下文判定统一在 config.typst_input，供 snippets 共用。
 -- ============================================================
 local M = {}
-
--- ─────────────────── 是否在 $ ... $ 里 ───────────────────
-local cache = { buf = -1, tick = -1, row = -1, col = -1, math = false }
-
---- 本行光标之前未闭合的 $ 个数（奇 = 在公式里）
---- 兜住「正在输入、$ 还没闭合」的情况：此时 treesitter 里还没有 math 节点
-local function line_in_math()
-  local pos = vim.api.nvim_win_get_cursor(0)
-  local before = vim.api.nvim_get_current_line():sub(1, pos[2])
-  before = before:gsub("\\%$", "") -- 去掉 \$ 转义
-  local _, n = before:gsub("%$", "")
-  return n % 2 == 1
-end
+local input = require("config.typst_input")
 
 --- 光标是否位于 typst 数学区（行内/行间 $...$）
 ---@return boolean
 function M.in_math()
-  local buf = vim.api.nvim_get_current_buf()
-  local tick = vim.api.nvim_buf_get_changedtick(buf)
-  local pos = vim.api.nvim_win_get_cursor(0)
-  local row, col = pos[1], pos[2]
-
-  if cache.buf == buf and cache.tick == tick and cache.row == row and cache.col == col then
-    return cache.math
-  end
-
-  local math = false
-  local ok = pcall(function()
-    local parser = vim.treesitter.get_parser(buf, "typst", { error = false })
-    if not parser then
-      return
-    end
-    local root = parser:parse()[1]:root()
-    local node = root:named_descendant_for_range(row - 1, col, row - 1, col)
-    while node do
-      if node:type() == "math" then
-        math = true
-        break
-      end
-      node = node:parent()
-    end
-  end)
-
-  -- treesitter 说在数学区就信它（能覆盖跨行的行间公式）；
-  -- 否则再看本行 $ 是否未闭合（覆盖「刚敲了 $ 还没写收尾」的输入过程）
-  if not ok or not math then
-    math = line_in_math()
-  end
-
-  cache = { buf = buf, tick = tick, row = row, col = col, math = math }
-  return math
+  return input.context().math
 end
 
 --- 数学区之外（正文）
 ---@return boolean
 function M.in_text()
-  return not M.in_math()
+  local ctx = input.context()
+  return not ctx.math and not ctx.protected
 end
 
 --- 光标是否在代码块/行内代码里（raw_blck / raw_span / blob）
@@ -86,45 +41,6 @@ function M.in_raw()
     return false
   end)
   return ok and res or false
-end
-
--- ─────────── 插入模式：$ 自动配对 / 全角 ￥ 纠正 ───────────
---- 敲下 $（或中文输入法打出的全角 ￥）时该怎么处理：
----   one  ← 代码块里 / 前面是反斜杠转义 / 已经在未闭合的数学区里 → 只插一个 $
----   skip ← 光标右边已经是 $ → 跳过它（括号配对手感）
----   pair ← 正文里 → 补成 $ $ 并把光标放到中间
----@return "one"|"skip"|"pair"
-function M.dollar_action()
-  local line = vim.api.nvim_get_current_line()
-  local col = vim.api.nvim_win_get_cursor(0)[2]
-  if line:sub(col, col) == "\\" or M.in_raw() then
-    return "one"
-  end
-  if line:sub(col + 1, col + 1) == "$" then
-    return "skip"
-  end
-  if M.in_math() then
-    return "one"
-  end
-  return "pair"
-end
-
---- 插入模式映射的执行体：直接改 buffer + 移光标（不依赖 termcode，expr 映射返回键码在这里不可靠）
-function M.dollar_insert()
-  local action = M.dollar_action()
-  local pos = vim.api.nvim_win_get_cursor(0)
-  local row, col = pos[1], pos[2]
-
-  if action == "skip" then
-    vim.api.nvim_win_set_cursor(0, { row, col + 1 })
-    return
-  end
-
-  local ul = vim.bo.undolevels
-  vim.bo.undolevels = -1 -- 与本次插入合并为一个 undo 块
-  vim.api.nvim_buf_set_text(0, row - 1, col, row - 1, col, { action == "pair" and "$$" or "$" })
-  vim.api.nvim_win_set_cursor(0, { row, col + 1 })
-  vim.bo.undolevels = ul
 end
 
 -- ─────────────────── 视觉选择包裹 ───────────────────
@@ -157,55 +73,6 @@ function M.wrap_selection(left, right, block)
     vim.api.nvim_buf_set_text(0, sl - 1, sc, sl - 1, sc, { left })
   end
 end
-
--- ─────────────────── 插入模式自动下标：a1 → a_1 ───────────────────
-local busy = false
-
---- 在 line 的 col 处识别「字母+刚输入的数字」，返回 (插入点偏移, 字母, 数字)
---- 兼容两种光标约定：插入模式的光标在插入点之后 / 停在刚输入的字符上
-local function match_sub(line, col)
-  local cands = {
-    { idx = col, digit = line:sub(col, col), letter = line:sub(col - 1, col - 1) },
-    { idx = col + 1, digit = line:sub(col + 1, col + 1), letter = line:sub(col, col) },
-  }
-  for _, c in ipairs(cands) do
-    if c.digit:match("%d") and c.letter:match("%a") then
-      -- 只在单词边界触发：a2 → a_2，但 ab2 不动；x_12 也不再动
-      local before = line:sub(c.idx - 2, c.idx - 2)
-      if not before:match("[%a%d_]") then
-        return c.idx, c.letter, c.digit
-      end
-    end
-  end
-  return nil
-end
-
---- 插入模式下把刚敲的 a2 变成 a_2（仅限 typst 数学区）
-function M.auto_subscript()
-  if busy or vim.bo.filetype ~= "typst" then
-    return
-  end
-  local pos = vim.api.nvim_win_get_cursor(0)
-  local row, col = pos[1], pos[2]
-  local idx, letter, digit = match_sub(vim.api.nvim_get_current_line(), col)
-  if not idx or not M.in_math() then
-    return
-  end
-
-  busy = true
-  local ul = vim.bo.undolevels
-  vim.bo.undolevels = -1 -- 与本次插入合并为一个 undo 块
-  vim.api.nvim_buf_set_text(0, row - 1, idx - 2, row - 1, idx, { letter .. "_" .. digit })
-  vim.api.nvim_win_set_cursor(0, { row, idx + 1 })
-  vim.bo.undolevels = ul
-  busy = false
-end
-
-vim.api.nvim_create_autocmd("TextChangedI", {
-  group = vim.api.nvim_create_augroup("TypstAutoSubscript", { clear = true }),
-  desc = "typst 数学区自动下标 a1 → a_1",
-  callback = M.auto_subscript,
-})
 
 -- ─────────── 数学区连按空格：渐进的真实间隙 ───────────
 -- 数学区里敲出来的空格只是「语法分隔」（渲染宽度 0，用来分开 ab 这种多字母 token），
@@ -286,20 +153,18 @@ function M.space_insert(dir)
   if plan == nil then
     -- 正文里的空格 / 普通退格：交回内置行为（保留自动换行、行首退格并行的语义）
     vim.api.nvim_feedkeys(
-      vim.api.nvim_replace_termcodes(dir == "down" and "<BS>" or "<Space>", true, false, true),
-      "n",
+      dir == "down" and input.backspace() or vim.api.nvim_replace_termcodes("<Space>", true, false, true),
+      "in",
       false
     )
     return
   end
 
-  local ul = vim.bo.undolevels
-  vim.bo.undolevels = -1 -- 与本次插入合并为一个 undo 块
+  pcall(vim.cmd, "undojoin")
   local from = col - plan.back
   vim.api.nvim_buf_set_text(0, row - 1, from, row - 1, col, { plan.text })
   local new_col = from + #plan.text
   vim.api.nvim_win_set_cursor(0, { row, new_col })
-  vim.bo.undolevels = ul
   chain = { buf = buf, row = row, col = new_col, kind = plan.kind }
 end
 
@@ -469,10 +334,7 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.keymap.set("x", "ga", function()
       M.wrap_selection("lr((", "))", false)
     end, vim.tbl_extend("force", o, { desc = "包成自适应括号" }))
-    -- 插入模式：$ 自动配对成 $…$（光标进中间）；全角 ￥ 当 $ 用（忘了切输入法时）
-    vim.keymap.set("i", "$", M.dollar_insert, vim.tbl_extend("force", o, { desc = "$ 自动配对，光标进中间" }))
-    vim.keymap.set("i", "¥", M.dollar_insert, vim.tbl_extend("force", o, { desc = "全角 ￥ 当 $ 用" }))
-    vim.keymap.set("i", "￥", M.dollar_insert, vim.tbl_extend("force", o, { desc = "全角 ￥ 当 $ 用" }))
+    input.setup(ev.buf)
     -- 插入模式：数学区连按空格 → 真实间隙；<BS> 对称地把整段间隙降一级
     vim.keymap.set("i", "<Space>", function()
       M.space_insert("up")

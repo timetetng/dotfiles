@@ -22,7 +22,7 @@ return {
       ["<Tab>"] = {
         function(cmp)
           if cmp.is_visible() then
-            return cmp.select_next()
+            return cmp.accept()
           end
           if cmp.snippet_active({ direction = 1 }) then
             return cmp.snippet_forward()
@@ -48,7 +48,13 @@ return {
       ["<Down>"] = { "select_next", "fallback" },
       ["<C-n>"] = { "select_next", "fallback_to_mappings" },
       ["<C-p>"] = { "select_prev", "fallback_to_mappings" },
-      ["<CR>"] = { "accept", "fallback" },
+      ["<CR>"] = {
+        function(cmp)
+          cmp.hide()
+          return false -- 继续 fallback：回车换行，不吞键、不确认补全。
+        end,
+        "fallback",
+      },
       -- 一键「选中并上屏」（blink 官方默认键）
       ["<C-y>"] = { "select_and_accept", "fallback" },
       -- 菜单开着但不想用当前选中项时：撤掉自动插入并关菜单（配合 preselect=true）
@@ -66,11 +72,9 @@ return {
     completion = {
       list = {
         selection = {
-          -- 菜单一弹出就选中第一项（回车/ C-y 直接上屏）
-          -- 注意：配合下面的 auto_insert，选中会把候选文本实时插到 buffer 里
-          -- （数学区打 alp 会被直接补成 alpha）；不想要时按 <C-e> 撤回
+          -- 默认高亮第一项，只有 Tab / C-y 才上屏；回车仅换行。
           preselect = true,
-          auto_insert = true,
+          auto_insert = false,
         },
       },
       menu = {
