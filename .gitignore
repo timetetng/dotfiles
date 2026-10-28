@@ -19,6 +19,9 @@ hyprland/waybar/waybar.backup/
 # 忽略 fcitx5 缓存
 fcitx5/fcitx5/conf/cached_layouts
 
+# 输入法界面配置由本机维护
+/fcitx5/fcitx5/conf/classicui.conf
+
 # 忽略 hyprland 运行时/状态文件
 hyprland/hypr/store/
 hyprland/hypr/scripts/toolbar_state
