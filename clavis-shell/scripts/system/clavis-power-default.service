@@ -1,0 +1,17 @@
+[Unit]
+Description=Clavis default balanced CPU power policy
+Requires=power-profiles-daemon.service
+After=power-profiles-daemon.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/clavis-power-profile set balanced
+TimeoutStartSec=45
+NoNewPrivileges=true
+ProtectHome=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/sys/devices/system/cpu /run
+
+[Install]
+WantedBy=multi-user.target

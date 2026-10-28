@@ -43,6 +43,9 @@ WidgetPanel {
                     "profile": "power-saver",
                     "description": qsTr("降低功耗，通常也能降低风扇噪声")
                 }, {
+                    "profile": "balanced",
+                    "description": PowerProfileService.performanceViaBalanced ? qsTr("默认：日常优先节能，负载升高时仍可动态加速") : qsTr("兼顾性能与功耗")
+                }, {
                     "profile": "performance",
                     "description": qsTr("优先性能，可能增加功耗与风扇噪声")
                 }]
@@ -76,7 +79,7 @@ WidgetPanel {
 
         Text {
             Layout.fillWidth: true
-            text: qsTr("仅切换系统电源策略，不改变音量或自定义风扇曲线。")
+            text: PowerProfileService.performanceViaBalanced ? qsTr("开机默认均衡；保留睿频与性能上限，不修改自定义风扇曲线。") : qsTr("仅切换系统电源策略，不改变音量或自定义风扇曲线。")
             wrapMode: Text.Wrap
             color: Appearance.colors.colOnLayer1
             font.family: Fonts.ui

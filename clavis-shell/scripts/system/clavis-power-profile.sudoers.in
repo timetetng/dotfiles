@@ -1,0 +1,3 @@
+# Install root-owned with mode 0440; substitute @USER@ with the local account.
+# No shell, interpreter, arbitrary arguments or caller-supplied paths are allowed.
+@USER@ ALL=(root) NOPASSWD: /usr/local/libexec/clavis-power-profile set power-saver, /usr/local/libexec/clavis-power-profile set balanced, /usr/local/libexec/clavis-power-profile set performance

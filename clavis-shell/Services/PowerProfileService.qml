@@ -16,6 +16,10 @@ Singleton {
     readonly property bool busy: queryProcess.running || setProcess.running
     readonly property string label: labelForProfile(profile)
     readonly property string icon: iconForProfile(profile)
+    // The installed, root-owned helper implements three CPU policies on this
+    // firmware/driver combination. Other machines keep using native profiles.
+    // It reads actual EPP values, so software balanced is not shown as performance.
+    readonly property bool performanceViaBalanced: productName.text().trim() === "Redmi G 2022" && biosVersion.text().trim() === "RMGAD6T0P1313" && platformDriver.text().trim() === "bitland-mifs-wmi"
 
     function labelForProfile(value) {
         switch (value) {
@@ -57,25 +61,63 @@ Singleton {
 
         operationFailure = "";
         requestedProfile = value;
-        setProcess.command = ["powerprofilesctl", "set", value];
+        setProcess.command = performanceViaBalanced ? ["/usr/bin/sudo", "-n", "/usr/local/libexec/clavis-power-profile", "set", value] : ["powerprofilesctl", "set", value];
         setProcess.running = true;
         commandTimeout.restart();
     }
 
     Component.onCompleted: refresh()
 
+    FileView {
+        id: productName
+
+        path: "/sys/class/dmi/id/product_name"
+        blockLoading: true
+    }
+
+    FileView {
+        id: biosVersion
+
+        path: "/sys/class/dmi/id/bios_version"
+        blockLoading: true
+    }
+
+    FileView {
+        id: platformDriver
+
+        path: "/sys/class/platform-profile/platform-profile-0/name"
+        blockLoading: true
+    }
+
     Process {
         id: queryProcess
 
-        command: ["powerprofilesctl", "list"]
+        command: root.performanceViaBalanced ? ["/usr/local/libexec/clavis-power-profile", "status"] : ["powerprofilesctl", "list"]
         environment: ({
             "LC_ALL": "C"
         })
         onExited: (exitCode) => {
             commandTimeout.stop();
-            const profiles = [];
+            let profiles = [];
             let active = "";
-            if (exitCode === 0) {
+            let parseFailure = "";
+            if (exitCode === 0 && root.performanceViaBalanced) {
+                try {
+                    const result = JSON.parse(queryOutput.text);
+                    if (result.schemaVersion !== 1 || !Array.isArray(result.supportedProfiles) || result.supportedProfiles.length !== 3 || !["power-saver", "balanced", "performance"].every((value) => {
+                        return result.supportedProfiles.indexOf(value) >= 0;
+                    }))
+                        throw new Error(qsTr("电源助手返回了不支持的数据格式。"));
+
+                    profiles = result.supportedProfiles;
+                    if (profiles.indexOf(result.profile) >= 0)
+                        active = result.profile;
+                    else
+                        parseFailure = qsTr("CPU 与平台电源策略不一致，请检查外部电源设置。");
+                } catch (error) {
+                    parseFailure = String(error);
+                }
+            } else if (exitCode === 0) {
                 for (const line of queryOutput.text.split("\n")) {
                     const match = line.match(/^\s*(\*)?\s*(power-saver|balanced|performance):/);
                     if (!match)
@@ -89,7 +131,7 @@ Singleton {
             }
             root.supportedProfiles = profiles;
             root.profile = active;
-            root.queryFailure = root.available ? "" : queryError.text.trim() || qsTr("无法读取系统电源模式，请确认 power-profiles-daemon 正常运行。");
+            root.queryFailure = root.available ? "" : parseFailure || queryError.text.trim() || qsTr("无法读取系统电源模式，请确认电源助手和系统电源服务可用。");
             if (root.requestedProfile.length > 0 && root.available) {
                 if (root.profile !== root.requestedProfile && root.operationFailure.length === 0)
                     root.operationFailure = qsTr("请求切换到「%1」，但系统实际为「%2」。").arg(root.labelForProfile(root.requestedProfile)).arg(root.label);
@@ -128,11 +170,11 @@ Singleton {
     Timer {
         id: commandTimeout
 
-        interval: 5000
+        interval: setProcess.running ? 45000 : 10000
         onTriggered: {
             queryProcess.running = false;
             setProcess.running = false;
-            root.queryFailure = qsTr("电源模式命令未完成，请检查 powerprofilesctl 和系统电源服务。");
+            root.queryFailure = qsTr("电源模式命令未完成，请检查电源助手和系统电源服务。");
         }
     }
 
