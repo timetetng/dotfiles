@@ -19,91 +19,94 @@
       "keys": "#74C69D",
       "title": "#95D5B2",
       "output": "#D8F3DC",
-      "separator": "#40916C"
+      "separator": "#74C69D" // 与 keys 同色，左右竖线颜色才统一
     },
     "size": {
       "binaryPrefix": "si",
       "ndigits": 2
     },
     "key": {
-      "width": 16 // 核心设置：固定宽度，确保右侧竖线对齐
+      "width": 17 // key 11 格 + 分隔符 3 格 = 14，余下 3 格空白后接 value
     }
   },
   "modules": [
     {
       "type": "custom",
-      "format": "╭──────────╮" // 技巧：删掉 key，直接在这里加空格对齐
+      "format": "╭───────────╮", // 13 格 = key 11 格 + 2，右边角正好压在分隔符的 │ 上
+      "outputColor": "#74C69D" // 横线跟左右竖线同色
     },
     // 用户名
     {
       "type": "command",
-      "key": "│  user  ",
+      "key": "│  user   ",
       "text": "whoami"
     },
     // 运行时间
     {
       "type": "uptime",
-      "key": "│ 󰔚 uptime"
+      "key": "│ 󰔚 uptime "
     },
     // 发行版
     {
       "type": "os",
-      "key": "│  distro"
+      "key": "│  distro "
     },
-    // 内核
+    // 内核（原 ⚙ 不在终端字体里，换成 nf-md-linux）
     {
       "type": "kernel",
-      "key": "│ ⚙ kernel",
+      "key": "│ 󰌽 kernel ",
       "format": "{release}"
     },
     // 窗口管理器
     {
       "type": "wm",
-      "key": "│  wm    "
+      "key": "│  wm     "
     },
     // 终端
     {
       "type": "command",
-      "key": "│  term  ",
+      "key": "│  term   ",
       "text": "echo $TERM"
     },
     // Shell
     {
       "type": "shell",
-      "key": "│  shell "
+      "key": "│  shell  "
     },
     // 编辑器
     {
       "type": "editor",
-      "key": "│  Editor"
+      "key": "│  editor "
     },
     // 磁盘
     {
       "type": "disk",
-      "key": "│ 󰋊 disk  ",
+      "key": "│ 󰋊 disk   ",
       "folders": "/",
       "format": "{size-used} / {size-total}"
     },
     // 内存
     {
       "type": "memory",
-      "key": "│ 󰍛 memory",
+      "key": "│ 󰍛 memory ",
       "format": "{used} / {total} ({percentage})"
     },
     // 中间分隔线
     {
       "type": "custom",
-      "format": "├──────────┤"
+      "format": "├───────────┤",
+      "outputColor": "#74C69D"
     },
     // 颜色圆点
     {
       "type": "colors",
-      "key": "│  colors",
+      "key": "│  colors ",
       "symbol": "circle"
     },
     {
       "type": "custom",
-      "format": "╰──────────╯"
+      "format": "╰───────────╯",
+      "outputColor": "#74C69D"
     }
   ]
 }
