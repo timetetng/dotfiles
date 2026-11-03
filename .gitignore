@@ -3,7 +3,7 @@
 # 忽略 Oh My Zsh 框架
 zsh/.oh-my-zsh/
 # 忽略各种备份文件
-*.bak
+*.bak*
 *.backup
 *~
 *.swp
