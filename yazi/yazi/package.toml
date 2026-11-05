@@ -68,6 +68,11 @@ use = "uhs-robert/recycle-bin"
 rev = "fa68711"
 hash = "8714306b5cac6359edbacbf545fbd691"
 
+[[plugin.deps]]
+use = "WhoSowSee/whoosh"
+rev = "cad8079"
+hash = "f6c11dc58d674764a4dd20e644138534"
+
 [[flavor.deps]]
 use = "yazi-rs/flavors:dracula"
 rev = "0670801"
