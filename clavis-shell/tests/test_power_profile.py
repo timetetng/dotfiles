@@ -63,6 +63,21 @@ class PowerProfileTests(unittest.TestCase):
         with patch.object(power, 'daemon_profile', self.daemon_profile):
             self.assertEqual(power.status()['profile'], '')
 
+    def test_platform_profile_drift_is_not_an_error(self):
+        # Firmware readback drifts between the two values for identical requests;
+        # only the daemon profile and EPP decide which policy is active.
+        for profile, platform in (('balanced', 'balanced-performance'),
+                                  ('performance', 'balanced-performance'),
+                                  ('performance', 'performance')):
+            self.put('firmware/acpi/platform_profile', platform)
+            for cpu in range(2):
+                self.put(f'devices/system/cpu/cpufreq/policy{cpu}/energy_performance_preference',
+                         power.PREFERENCES[profile])
+            with patch.object(power, 'daemon_profile', return_value='performance'):
+                result = power.status()
+            self.assertEqual(result['profile'], profile)
+            self.assertEqual(result['platformProfile'], platform)
+
     def test_readback_failure_restores_previous_policy(self):
         before = {p: p.read_text() for p in power.policies()}
         with patch.object(power, 'daemon_profile', self.daemon_profile), \

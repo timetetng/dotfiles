@@ -18,7 +18,8 @@ Singleton {
     readonly property string icon: iconForProfile(profile)
     // The installed, root-owned helper implements three CPU policies on this
     // firmware/driver combination. Other machines keep using native profiles.
-    // It reads actual EPP values, so software balanced is not shown as performance.
+    // It reads actual EPP values; platform_profile is informational because the
+    // firmware readback drifts for identical requests.
     readonly property bool performanceViaBalanced: productName.text().trim() === "Redmi G 2022" && biosVersion.text().trim() === "RMGAD6T0P1313" && platformDriver.text().trim() === "bitland-mifs-wmi"
 
     function labelForProfile(value) {
@@ -113,7 +114,7 @@ Singleton {
                     if (profiles.indexOf(result.profile) >= 0)
                         active = result.profile;
                     else
-                        parseFailure = qsTr("CPU 与平台电源策略不一致，请检查外部电源设置。");
+                        parseFailure = qsTr("电源助手返回了无法识别的电源状态，请重新安装电源助手。");
                 } catch (error) {
                     parseFailure = String(error);
                 }

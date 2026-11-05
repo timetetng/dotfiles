@@ -53,14 +53,16 @@ def status():
     if not supported():
         raise RuntimeError('Unsupported machine, BIOS or platform driver')
     active = daemon_profile()
+    # Informational only: this firmware's readback drifts between 'performance'
+    # and 'balanced-performance' for the same request, so it cannot decide the
+    # active policy. The policy is defined by the daemon profile plus the EPP
+    # values this helper writes.
     platform = (SYS / 'firmware/acpi/platform_profile').read_text().strip()
     preferences = sorted({p.read_text().strip() for p in policies()})
     profile = ''
     for candidate, preference in PREFERENCES.items():
         expected_daemon = 'power-saver' if candidate == 'power-saver' else 'performance'
-        expected_platform = 'low-power' if candidate == 'power-saver' else 'performance'
-        if (active == expected_daemon and platform == expected_platform
-                and preferences == [preference]):
+        if active == expected_daemon and preferences == [preference]:
             profile = candidate
             break
     return {'schemaVersion': 1, 'profile': profile,
@@ -90,7 +92,7 @@ def set_profile(profile):
             p.write_text(preference + '\n')
         result = status()
         if result['profile'] != profile:
-            raise RuntimeError('Requested policy did not match the actual CPU/platform state')
+            raise RuntimeError('Requested policy did not match the actual CPU state')
         return result
     except Exception as error:
         rollback_errors = []
