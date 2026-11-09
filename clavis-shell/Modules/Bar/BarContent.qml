@@ -59,6 +59,39 @@ Item {
 
     }
 
+    // 鼠标停在展开后的 pill 上也算停留在 bar 上，否则 auto-hide 会在
+    // 用户正要点击时把 bar 收起。
+    HoverHandler {
+        parent: leadingSection
+        onHoveredChanged: EdgeRevealService.setHovered(root.screen, root.axis.edge, "bar-leading", hovered)
+    }
+
+    HoverHandler {
+        parent: trailingSection
+        onHoveredChanged: EdgeRevealService.setHovered(root.screen, root.axis.edge, "bar-trailing", hovered)
+    }
+
+    // 托盘菜单与溢出面板是独立窗口，鼠标移进去后 bar 会失去 hover；
+    // 弹层打开期间持住，避免 bar 在菜单下面滑走。
+    property bool trayPopupOpen: false
+    property bool trayPopupHeld: false
+
+    onTrayPopupOpenChanged: {
+        if (root.trayPopupOpen === root.trayPopupHeld)
+            return;
+
+        root.trayPopupHeld = root.trayPopupOpen;
+        if (root.trayPopupHeld)
+            EdgeRevealService.acquireHold(root.screen, root.axis.edge);
+        else
+            EdgeRevealService.releaseHold(root.screen, root.axis.edge);
+    }
+
+    Component.onDestruction: {
+        if (root.trayPopupHeld)
+            EdgeRevealService.releaseHold(root.screen, root.axis.edge);
+    }
+
     Instantiator {
         id: componentInstantiator
 

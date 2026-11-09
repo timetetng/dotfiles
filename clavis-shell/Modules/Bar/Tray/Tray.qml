@@ -143,10 +143,22 @@ Item {
     onTrayOverflowOpenChanged: {
         if (!root.trayOverflowOpen)
             root.overflowAnchorReady = false;
+        root.publishPopupState();
     }
     onEdgeChanged: {
         if (root.trayOverflowOpen)
             Qt.callLater(root.updateOverflowPosition);
+    }
+    onActiveMenuChanged: root.publishPopupState()
+    Component.onCompleted: root.publishPopupState()
+
+    // 让 bar 知道有弹层打开，auto-hide 期间不收起。
+    function publishPopupState() {
+        const target = root.barVisualItem;
+        if (!target || target.trayPopupOpen === undefined)
+            return;
+
+        target.trayPopupOpen = root.activeMenu !== null || root.trayOverflowOpen;
     }
 
     TopBarPillBackground { anchors.fill: parent }

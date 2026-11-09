@@ -14,6 +14,9 @@ Singleton {
     readonly property real barPopupGap: 8
     readonly property real barPopupScreenMargin: 10
 
+    // Auto-hide 收起后留在屏幕边缘的唤出热区厚度。
+    readonly property real edgeRevealHotzone: 3
+
     // Presentation compatibility aliases. Surface geometry must use the
     // semantic tokens above so margin, visuals, and shadow never mix.
     readonly property real barHeight: barVisualThickness

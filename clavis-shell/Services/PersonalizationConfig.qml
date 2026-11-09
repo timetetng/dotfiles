@@ -269,7 +269,9 @@ Singleton {
     property int cursorHideAfterInactiveMs: 0
     property string iconTheme: ""
     property string keystoneStyle: "bangs"
+    property bool keystoneAutoHide: true
     property string barPosition: "top"
+    property bool barAutoHide: true
     readonly property var barComponentIds: ["workspaces", "information", "activeWindow", "tray", "systemMonitor", "quickSettings"]
     readonly property var defaultBarLeadingComponents: ["workspaces", "information", "activeWindow"]
     readonly property var defaultBarTrailingComponents: ["tray", "systemMonitor", "quickSettings"]
@@ -1033,6 +1035,10 @@ Singleton {
         setValue("barPosition", normalizedEdgePosition(value));
     }
 
+    function setBarAutoHide(value) {
+        setValue("barAutoHide", !!value);
+    }
+
     function normalizedBarComponents(raw, excluded) {
         const source = Array.isArray(raw) ? raw : [];
         const blocked = excluded || [];
@@ -1119,6 +1125,10 @@ Singleton {
 
     function setKeystonePosition(value) {
         setValue("keystonePosition", normalizedEdgePosition(value));
+    }
+
+    function setKeystoneAutoHide(value) {
+        setValue("keystoneAutoHide", !!value);
     }
 
     function setKeystoneHideDate(value) {
@@ -1297,6 +1307,7 @@ Singleton {
             "keystone": {
                 "style": root.keystoneStyle,
                 "position": root.keystonePosition,
+                "autoHide": root.keystoneAutoHide,
                 "hideDate": root.keystoneHideDate,
                 "horizontalClock": {
                     "fontSize": root.horizontalClockFontSize,
@@ -1306,6 +1317,7 @@ Singleton {
             },
             "bar": {
                 "position": root.barPosition,
+                "autoHide": root.barAutoHide,
                 "barLeadingComponents": root.barLeadingComponents.slice(),
                 "barTrailingComponents": root.barTrailingComponents.slice()
             },
@@ -1401,11 +1413,13 @@ Singleton {
         root.shellBlurXray = typeof effects.shellBlurXray === "boolean" ? effects.shellBlurXray : true;
         root.keystoneStyle = normalizedOption(root.keystoneStyles, keystone.style, "bangs");
         root.keystonePosition = normalizedEdgePosition(keystone.position);
+        root.keystoneAutoHide = typeof keystone.autoHide === "boolean" ? keystone.autoHide : true;
         root.keystoneHideDate = typeof keystone.hideDate === "boolean" ? keystone.hideDate : false;
         root.horizontalClockFontSize = root.normalizedBoundedInt(horizontalClock.fontSize, 22, 16, 28);
         root.horizontalClockAxes = root.normalizedHorizontalClockAxes(horizontalClock.axes);
         root.horizontalClockDigits = root.normalizedHorizontalClockDigits(horizontalClock.digits);
         root.barPosition = normalizedEdgePosition(bar.position);
+        root.barAutoHide = typeof bar.autoHide === "boolean" ? bar.autoHide : true;
         const hasBarLayout = Array.isArray(bar.barLeadingComponents) || Array.isArray(bar.barTrailingComponents);
         const barLayout = root.normalizedBarLayout(bar.barLeadingComponents, bar.barTrailingComponents, !hasBarLayout);
         root.barLeadingComponents = barLayout.leading;

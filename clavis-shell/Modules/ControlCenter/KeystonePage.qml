@@ -133,6 +133,19 @@ Item {
                             PersonalizationConfig.setKeystonePosition(position)
                     }
                 }
+
+                SettingsRow {
+                    Layout.fillWidth: true
+                    title: qsTr("自动隐藏")
+                    supportingText: qsTr("鼠标离开后收起，移到屏幕边缘时出现")
+
+                    trailing: StyledSwitch {
+                        checked: PersonalizationConfig.keystoneAutoHide
+                        Accessible.name: qsTr("自动隐藏")
+                        onToggled: checked =>
+                            PersonalizationConfig.setKeystoneAutoHide(checked)
+                    }
+                }
             }
 
             KeystoneSection {

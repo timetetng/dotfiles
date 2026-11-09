@@ -77,6 +77,23 @@ Variants {
         property real edgeCurveSideControl: 0.58
         property real edgeCurveOuterControl: 0.42
 
+        // Auto-hide：只有收缩态的时钟收起，dashboard/hub/歌词/录音等内容态
+        // 一律保持可见。收起时把整个 keystone 容器推出屏外。
+        readonly property bool autoHidden: PersonalizationConfig.keystoneAutoHide
+        readonly property bool revealed: !keystoneWindow.autoHidden
+            || !root.isCollapsedMode
+            || EdgeRevealService.isRevealed(keystoneWindow.screen, keystoneWindow.edge)
+        property real hideShift: keystoneWindow.revealed
+            ? 0 : Math.max(0, root.height) + styleSurface.edgeMargin + 12
+
+        Behavior on hideShift {
+            NumberAnimation {
+                duration: 220
+                easing.type: Easing.OutCubic
+            }
+
+        }
+
         function cancelRecord(): string {
             RecordingService.refresh();
             return "RECORD_CANCELLED";
@@ -176,7 +193,40 @@ Variants {
         }
 
         mask: Region {
-            item: hitBoxRegion
+            item: maskGate
+
+            Region {
+                item: revealHotzone
+            }
+
+        }
+
+        // Region 只跟随 item 自身几何。收起是把 maskContainer 的 anchor
+        // 边距推出屏幕，这里用零尺寸把输入区一并关掉，同时避免向合成器
+        // 提交负坐标矩形。
+        Item {
+            id: maskGate
+
+            x: hitBoxRegion.x
+            y: hitBoxRegion.y
+            width: keystoneWindow.revealed ? hitBoxRegion.width : 0
+            height: keystoneWindow.revealed ? hitBoxRegion.height : 0
+            visible: false
+        }
+
+        Item {
+            id: revealHotzone
+
+            // 收起后唯一留在屏幕边缘的输入区域，悬停即唤出钥石。
+            x: keystoneWindow.rightEdge ? keystoneWindow.width - Sizes.edgeRevealHotzone : 0
+            y: keystoneWindow.bottomEdge ? keystoneWindow.height - Sizes.edgeRevealHotzone : 0
+            width: keystoneWindow.horizontalEdge ? keystoneWindow.width : Sizes.edgeRevealHotzone
+            height: keystoneWindow.horizontalEdge ? Sizes.edgeRevealHotzone : keystoneWindow.height
+
+            HoverHandler {
+                onHoveredChanged: EdgeRevealService.setHovered(keystoneWindow.screen, keystoneWindow.edge, "keystone-hotzone", hovered)
+            }
+
         }
 
         // ============================================================
@@ -296,10 +346,10 @@ Variants {
         // ============================================================
         Item {
             id: maskContainer
-            anchors.topMargin: keystoneWindow.topEdge ? styleSurface.edgeMargin : 0
-            anchors.bottomMargin: keystoneWindow.bottomEdge ? styleSurface.edgeMargin : 0
-            anchors.leftMargin: keystoneWindow.leftEdge ? styleSurface.edgeMargin : 0
-            anchors.rightMargin: keystoneWindow.rightEdge ? styleSurface.edgeMargin : 0
+            anchors.topMargin: keystoneWindow.topEdge ? styleSurface.edgeMargin - keystoneWindow.hideShift : 0
+            anchors.bottomMargin: keystoneWindow.bottomEdge ? styleSurface.edgeMargin - keystoneWindow.hideShift : 0
+            anchors.leftMargin: keystoneWindow.leftEdge ? styleSurface.edgeMargin - keystoneWindow.hideShift : 0
+            anchors.rightMargin: keystoneWindow.rightEdge ? styleSurface.edgeMargin - keystoneWindow.hideShift : 0
             anchors.horizontalCenterOffset: styleSurface.detached
                 && keystoneWindow.horizontalEdge && root.recordingPresentationActive
                 ? -0.15 * Math.max(0, root.width - root.collapsedW)
@@ -1079,6 +1129,12 @@ Variants {
                         && !root.isNotifMode
                         && !root.isVolumeMode
                     acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+
+                    // 鼠标停在展开的时钟上也算停留在钥石上，否则 auto-hide
+                    // 会在用户正要点击时把时钟收起。
+                    onContainsMouseChanged: EdgeRevealService.setHovered(
+                        keystoneWindow.screen, keystoneWindow.edge, "keystone-pill", containsMouse
+                    )
                     
                     onClicked: (mouse) => {
                         if (mouse.button === Qt.MiddleButton) {
