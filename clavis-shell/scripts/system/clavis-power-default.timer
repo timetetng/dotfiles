@@ -1,0 +1,10 @@
+[Unit]
+Description=Apply the Clavis default CPU power policy after boot
+
+[Timer]
+OnBootSec=20s
+AccuracySec=1s
+Unit=clavis-power-default.service
+
+[Install]
+WantedBy=timers.target

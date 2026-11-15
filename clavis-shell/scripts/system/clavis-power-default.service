@@ -1,17 +1,18 @@
 [Unit]
 Description=Clavis default balanced CPU power policy
-Requires=power-profiles-daemon.service
-After=power-profiles-daemon.service
+Documentation=file:///usr/local/libexec/clavis-power-profile
 
+# Triggered by clavis-power-default.timer, never pulled in by a target. The
+# power daemon orders itself After=multi-user.target, so a multi-user unit that
+# also says After=power-profiles-daemon.service forms an ordering cycle and gets
+# deleted on every boot. The timer plus `--wait` waits for the daemon at
+# runtime instead of relying on boot ordering.
 [Service]
 Type=oneshot
-ExecStart=/usr/local/libexec/clavis-power-profile set balanced
-TimeoutStartSec=45
+ExecStart=/usr/local/libexec/clavis-power-profile set balanced --wait=45
+TimeoutStartSec=90
 NoNewPrivileges=true
 ProtectHome=true
 PrivateTmp=true
 ProtectSystem=strict
 ReadWritePaths=/sys/devices/system/cpu /run
-
-[Install]
-WantedBy=multi-user.target

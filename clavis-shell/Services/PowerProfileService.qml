@@ -11,8 +11,12 @@ Singleton {
     property string queryFailure: ""
     property string operationFailure: ""
     property string requestedProfile: ""
+    // Whatever the power daemon reports, even when the CPU state cannot be
+    // classified. Used to offer a sensible "re-apply" target.
+    property string daemonProfile: ""
     readonly property string lastError: operationFailure || queryFailure
     readonly property bool available: supportedProfiles.length > 0 && profile.length > 0
+    readonly property string reapplyTarget: requestedProfile.length > 0 ? requestedProfile : (profile.length > 0 ? profile : fallbackTarget(daemonProfile))
     readonly property bool busy: queryProcess.running || setProcess.running
     readonly property string label: labelForProfile(profile)
     readonly property string icon: iconForProfile(profile)
@@ -48,6 +52,15 @@ Singleton {
         }
     }
 
+    function fallbackTarget(daemon) {
+        // The helper maps both balanced and performance onto the daemon's
+        // performance profile; only power-saver is unambiguous.
+        if (performanceViaBalanced)
+            return daemon === "power-saver" ? "power-saver" : "balanced";
+
+        return supportedProfiles.indexOf(daemon) >= 0 ? daemon : "balanced";
+    }
+
     function refresh() {
         if (busy)
             return ;
@@ -56,8 +69,11 @@ Singleton {
         commandTimeout.restart();
     }
 
-    function setProfile(value) {
-        if (busy || supportedProfiles.indexOf(value) < 0 || value === profile)
+    function applyProfile(value, force) {
+        if (busy || supportedProfiles.indexOf(value) < 0)
+            return ;
+
+        if (!force && value === profile)
             return ;
 
         operationFailure = "";
@@ -65,6 +81,16 @@ Singleton {
         setProcess.command = performanceViaBalanced ? ["/usr/bin/sudo", "-n", "/usr/local/libexec/clavis-power-profile", "set", value] : ["powerprofilesctl", "set", value];
         setProcess.running = true;
         commandTimeout.restart();
+    }
+
+    function setProfile(value) {
+        applyProfile(value, false);
+    }
+
+    // Re-applies the last known target even when the readback already shows it,
+    // which is how a daemon/CPU mismatch gets repaired.
+    function reapply() {
+        applyProfile(reapplyTarget, true);
     }
 
     Component.onCompleted: refresh()
@@ -111,10 +137,11 @@ Singleton {
                         throw new Error(qsTr("电源助手返回了不支持的数据格式。"));
 
                     profiles = result.supportedProfiles;
+                    root.daemonProfile = String(result.daemonProfile || "");
                     if (profiles.indexOf(result.profile) >= 0)
                         active = result.profile;
                     else
-                        parseFailure = qsTr("电源助手返回了无法识别的电源状态，请重新安装电源助手。");
+                        parseFailure = qsTr("系统电源状态与 CPU 设置不一致，可点「重新应用」修复。");
                 } catch (error) {
                     parseFailure = String(error);
                 }
@@ -132,6 +159,9 @@ Singleton {
             }
             root.supportedProfiles = profiles;
             root.profile = active;
+            if (!root.performanceViaBalanced)
+                root.daemonProfile = active;
+
             root.queryFailure = root.available ? "" : parseFailure || queryError.text.trim() || qsTr("无法读取系统电源模式，请确认电源助手和系统电源服务可用。");
             if (root.requestedProfile.length > 0 && root.available) {
                 if (root.profile !== root.requestedProfile && root.operationFailure.length === 0)

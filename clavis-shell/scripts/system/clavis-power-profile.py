@@ -4,6 +4,9 @@
 Install a root-owned copy at /usr/local/libexec/clavis-power-profile. Only fixed
 `set PROFILE` calls should be allowed via sudo; `status` needs no privileges.
 This deliberately does not alter frequency limits, turbo or fan controls.
+
+`set PROFILE --wait=SECONDS` retries while the power daemon or the platform
+profile interface is still coming up; the boot default unit uses it.
 """
 
 import fcntl
@@ -12,6 +15,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 SYS = Path('/sys')
 POWERPROFILESCTL = '/usr/bin/powerprofilesctl'
@@ -20,6 +24,18 @@ PREFERENCES = {
     'balanced': 'balance_power',
     'performance': 'performance',
 }
+
+# Failures that clear up once the daemon and firmware driver are ready; only
+# these are retried, and only while --wait allows it.
+RETRYABLE_ERRORS = (
+    'Failed to communicate with power-profiles-daemon',
+    'Operation not supported',
+)
+
+# power-profiles-daemon applies its own CPU driver asynchronously after the
+# platform profile changes, which can land on top of the EPP values written here.
+SETTLE_SECONDS = 1.0
+SETTLE_ATTEMPTS = 3
 
 
 def supported():
@@ -40,19 +56,25 @@ def policies():
     return paths
 
 
-def daemon_profile(value=None):
+def daemon_profile(value=None, wait=0.0):
     args = [POWERPROFILESCTL, 'get'] if value is None else [POWERPROFILESCTL, 'set', value]
-    result = subprocess.run(args, capture_output=True, text=True, timeout=8,
-                            env={'PATH': '/usr/bin', 'LC_ALL': 'C'})
-    if result.returncode:
-        raise RuntimeError(result.stderr.strip() or 'Power profile command failed')
-    return result.stdout.strip()
+    deadline = time.monotonic() + max(0.0, wait)
+    while True:
+        result = subprocess.run(args, capture_output=True, text=True, timeout=8,
+                                env={'PATH': '/usr/bin', 'LC_ALL': 'C'})
+        if not result.returncode:
+            return result.stdout.strip()
+        message = result.stderr.strip() or 'Power profile command failed'
+        if (not any(pattern in message for pattern in RETRYABLE_ERRORS)
+                or time.monotonic() >= deadline):
+            raise RuntimeError(message)
+        time.sleep(1.0)
 
 
-def status():
+def status(wait=0.0):
     if not supported():
         raise RuntimeError('Unsupported machine, BIOS or platform driver')
-    active = daemon_profile()
+    active = daemon_profile(wait=wait)
     # Informational only: this firmware's readback drifts between 'performance'
     # and 'balanced-performance' for the same request, so it cannot decide the
     # active policy. The policy is defined by the daemon profile plus the EPP
@@ -70,7 +92,7 @@ def status():
             'platformProfile': platform, 'cpuPreferences': preferences}
 
 
-def set_profile(profile):
+def set_profile(profile, wait=0.0):
     if profile not in PREFERENCES:
         raise ValueError('Unknown profile')
     if os.geteuid() != 0:
@@ -83,17 +105,26 @@ def set_profile(profile):
         available = p.with_name('energy_performance_available_preferences').read_text().split()
         if preference not in available:
             raise RuntimeError(f'{p.parent.name} does not support {preference}')
-    previous_daemon = daemon_profile()
+    previous_daemon = daemon_profile(wait=wait)
     previous_preferences = {p: p.read_text().strip() for p in paths}
     try:
         # On this firmware, requesting balanced reads back platform performance.
-        daemon_profile('power-saver' if profile == 'power-saver' else 'balanced')
-        for p in paths:
-            p.write_text(preference + '\n')
-        result = status()
-        if result['profile'] != profile:
-            raise RuntimeError('Requested policy did not match the actual CPU state')
-        return result
+        daemon_profile('power-saver' if profile == 'power-saver' else 'balanced',
+                       wait=wait)
+        # Only a real daemon profile change makes the daemon re-apply its own
+        # CPU driver, so only then is a settle delay needed.
+        expected_daemon = 'power-saver' if profile == 'power-saver' else 'performance'
+        if previous_daemon != expected_daemon:
+            time.sleep(SETTLE_SECONDS)
+        for attempt in range(SETTLE_ATTEMPTS):
+            for p in paths:
+                p.write_text(preference + '\n')
+            result = status(wait=wait)
+            if result['profile'] == profile:
+                return result
+            if attempt + 1 < SETTLE_ATTEMPTS:
+                time.sleep(SETTLE_SECONDS)
+        raise RuntimeError('Requested policy did not match the actual CPU state')
     except Exception as error:
         rollback_errors = []
         try:
@@ -110,18 +141,33 @@ def set_profile(profile):
         raise
 
 
+def wait_argument(args):
+    if not args:
+        return 0.0
+    if len(args) > 1 or not args[0].startswith('--wait='):
+        raise ValueError('Usage: clavis-power-profile status | set PROFILE [--wait=SECONDS]')
+    try:
+        wait = float(args[0][len('--wait='):])
+    except ValueError:
+        raise ValueError('Invalid wait duration') from None
+    if not 0 <= wait <= 300:
+        raise ValueError('Invalid wait duration')
+    return wait
+
+
 def main(args):
     if args == ['status']:
         return status()
-    if len(args) == 2 and args[0] == 'set' and args[1] in PREFERENCES:
+    if len(args) >= 2 and args[0] == 'set' and args[1] in PREFERENCES:
+        wait = wait_argument(args[2:])
         # Serialize boot defaults and interactive changes. Never use a caller path.
         try:
             with open('/run/clavis-power-profile.lock', 'a', encoding='utf-8') as lock:
                 fcntl.flock(lock, fcntl.LOCK_EX)
-                return set_profile(args[1])
+                return set_profile(args[1], wait)
         except OSError as error:
             raise RuntimeError(f'Unable to lock or apply CPU power policy: {error}') from error
-    raise ValueError('Usage: clavis-power-profile status | set {power-saver,balanced,performance}')
+    raise ValueError('Usage: clavis-power-profile status | set PROFILE [--wait=SECONDS]')
 
 
 if __name__ == '__main__':

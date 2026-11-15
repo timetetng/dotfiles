@@ -34,6 +34,17 @@ WidgetPanel {
             message: PowerProfileService.lastError
         }
 
+        SettingsRow {
+            Layout.fillWidth: true
+            visible: PowerProfileService.lastError.length > 0 && PowerProfileService.supportedProfiles.length > 0
+            iconName: "refresh"
+            title: qsTr("重新应用「%1」").arg(PowerProfileService.labelForProfile(PowerProfileService.reapplyTarget))
+            supportingText: qsTr("把系统电源状态与 CPU 设置重新同步到该档位")
+            interactive: true
+            enabled: !PowerProfileService.busy
+            onClicked: PowerProfileService.reapply()
+        }
+
         SettingsSection {
             Layout.fillWidth: true
             title: PowerProfileService.busy ? qsTr("正在同步…") : qsTr("当前：") + PowerProfileService.label

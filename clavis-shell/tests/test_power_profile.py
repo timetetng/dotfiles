@@ -2,6 +2,7 @@
 
 import importlib.util
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -40,7 +41,7 @@ class PowerProfileTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(value + '\n')
 
-    def daemon_profile(self, value=None):
+    def daemon_profile(self, value=None, wait=0.0):
         if value is not None:
             if value not in ('balanced', 'power-saver'):
                 raise RuntimeError('Firmware rejects direct performance requests')
@@ -51,7 +52,8 @@ class PowerProfileTests(unittest.TestCase):
 
     def test_three_policies_round_trip(self):
         with patch.object(power, 'daemon_profile', self.daemon_profile), \
-                patch.object(power.os, 'geteuid', return_value=0):
+                patch.object(power.os, 'geteuid', return_value=0), \
+                patch.object(power.time, 'sleep'):
             for profile in ('balanced', 'power-saver', 'performance', 'balanced'):
                 result = power.set_profile(profile)
                 self.assertEqual(result['profile'], profile)
@@ -101,6 +103,65 @@ class PowerProfileTests(unittest.TestCase):
             power.set_profile('../../etc/shadow')
         with self.assertRaises(ValueError):
             power.main(['set', 'balanced', 'extra-argument'])
+
+    def test_daemon_not_ready_is_retried(self):
+        calls = []
+
+        def run(args, **kwargs):
+            calls.append(args)
+            if len(calls) < 3:
+                return subprocess.CompletedProcess(
+                    args, 1, '',
+                    'Failed to communicate with power-profiles-daemon: no name owner')
+            return subprocess.CompletedProcess(args, 0, 'performance\n', '')
+
+        with patch.object(power.subprocess, 'run', side_effect=run), \
+                patch.object(power.time, 'sleep'):
+            self.assertEqual(power.daemon_profile(wait=5), 'performance')
+        self.assertEqual(len(calls), 3)
+
+    def test_transient_failure_without_wait_is_not_retried(self):
+        with patch.object(power.subprocess, 'run',
+                          return_value=subprocess.CompletedProcess(
+                              [], 1, '', 'Power profile command failed')) as run:
+            with self.assertRaisesRegex(RuntimeError, 'Power profile command failed'):
+                power.daemon_profile()
+            self.assertEqual(run.call_count, 1)
+
+    def test_wait_argument_is_validated(self):
+        for argument in ('--wait=abc', '--wait=-1', '--wait=301', '--wait=5s', 'extra'):
+            with self.assertRaises(ValueError):
+                power.main(['set', 'balanced', argument])
+
+    def test_daemon_reapply_after_write_is_corrected(self):
+        real_status = power.status
+        calls = []
+
+        def status_with_one_reapply(wait=0.0):
+            calls.append(wait)
+            if len(calls) == 1:
+                # ppd's own CPU driver lands after ours and resets EPP.
+                for p in power.policies():
+                    p.write_text('performance\n')
+            return real_status(wait=wait)
+
+        with patch.object(power, 'daemon_profile', self.daemon_profile), \
+                patch.object(power.os, 'geteuid', return_value=0), \
+                patch.object(power.time, 'sleep'), \
+                patch.object(power, 'status', status_with_one_reapply):
+            result = power.set_profile('balanced')
+        self.assertEqual(result['profile'], 'balanced')
+        self.assertEqual(len(calls), 2)
+        self.assertEqual({p.read_text() for p in power.policies()}, {'balance_power\n'})
+
+    def test_no_settle_delay_when_daemon_already_matches(self):
+        with patch.object(power, 'daemon_profile', self.daemon_profile), \
+                patch.object(power.os, 'geteuid', return_value=0), \
+                patch.object(power.time, 'sleep') as sleep:
+            power.set_profile('balanced')
+            sleep.assert_not_called()
+            power.set_profile('performance')
+            sleep.assert_not_called()
 
     def test_set_requires_root(self):
         with patch.object(power.os, 'geteuid', return_value=1000):
