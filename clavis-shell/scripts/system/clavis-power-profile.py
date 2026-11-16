@@ -1,12 +1,18 @@
 #!/usr/bin/python3 -I
-"""Three CPU power policies for the tested Redmi G firmware/driver combination.
+"""Clavis power policy adapter for the tested Redmi G firmware/driver pair.
 
 Install a root-owned copy at /usr/local/libexec/clavis-power-profile. Only fixed
-`set PROFILE` calls should be allowed via sudo; `status` needs no privileges.
-This deliberately does not alter frequency limits, turbo or fan controls.
+`set PROFILE` / `gpu LEVEL` calls are allowlisted via sudo; `status` needs no
+privileges.
 
-`set PROFILE --wait=SECONDS` retries while the power daemon or the platform
-profile interface is still coming up; the boot default unit uses it.
+All CPU/ACPI/GPU writes live in the `powermode` helper installed next to this
+file (clavis-powermode), so the bar, the boot default unit and the terminal share
+one implementation. This wrapper only validates arguments, gates on the known
+firmware combination and translates powermode's JSON into the shell's schema.
+
+`set` deliberately does not roll back on failure: powermode already writes only
+to a verified end state, and the shell exposes「重新应用」for a daemon/CPU
+mismatch.
 """
 
 import fcntl
@@ -18,24 +24,14 @@ import sys
 import time
 
 SYS = Path('/sys')
+POWERMODE = Path('/usr/local/libexec/clavis-powermode')
 POWERPROFILESCTL = '/usr/bin/powerprofilesctl'
-PREFERENCES = {
-    'power-saver': 'power',
-    'balanced': 'balance_power',
-    'performance': 'performance',
-}
-
-# Failures that clear up once the daemon and firmware driver are ready; only
-# these are retried, and only while --wait allows it.
-RETRYABLE_ERRORS = (
-    'Failed to communicate with power-profiles-daemon',
-    'Operation not supported',
-)
-
-# power-profiles-daemon applies its own CPU driver asynchronously after the
-# platform profile changes, which can land on top of the EPP values written here.
-SETTLE_SECONDS = 1.0
-SETTLE_ATTEMPTS = 3
+PROFILES = ('power-saver', 'balanced', 'performance')
+GPU_LEVELS = ('0', '1', '2', '3')
+ENV = {'PATH': '/usr/local/bin:/usr/bin', 'LC_ALL': 'C'}
+COMMAND_TIMEOUT = 30
+RETRY_SECONDS = 1.0
+LOCK_PATH = '/run/clavis-power-profile.lock'
 
 
 def supported():
@@ -44,108 +40,105 @@ def supported():
         'class/dmi/id/bios_version': 'RMGAD6T0P1313',
         'class/platform-profile/platform-profile-0/name': 'bitland-mifs-wmi',
     }
-    return all((SYS / name).read_text().strip() == value
-               for name, value in expected.items())
+    try:
+        return all((SYS / name).read_text().strip() == value
+                   for name, value in expected.items())
+    except OSError:
+        return False
 
 
-def policies():
-    paths = sorted((SYS / 'devices/system/cpu/cpufreq').glob(
-        'policy*/energy_performance_preference'))
-    if not paths:
-        raise RuntimeError('No CPU energy preference controls are available')
-    return paths
+def run(command, timeout=COMMAND_TIMEOUT):
+    result = subprocess.run([str(part) for part in command], capture_output=True,
+                            text=True, timeout=timeout, env=ENV)
+    if result.returncode:
+        message = result.stderr.strip() or result.stdout.strip()
+        raise RuntimeError(message or f'{Path(str(command[0])).name} failed')
+    return result.stdout.strip()
 
 
-def daemon_profile(value=None, wait=0.0):
-    args = [POWERPROFILESCTL, 'get'] if value is None else [POWERPROFILESCTL, 'set', value]
+def daemon_ready(wait=0.0):
+    """The daemon applies its own CPU driver asynchronously; wait for it at boot."""
     deadline = time.monotonic() + max(0.0, wait)
     while True:
-        result = subprocess.run(args, capture_output=True, text=True, timeout=8,
-                                env={'PATH': '/usr/bin', 'LC_ALL': 'C'})
+        result = subprocess.run([POWERPROFILESCTL, 'get'], capture_output=True,
+                                text=True, timeout=8, env=ENV)
         if not result.returncode:
-            return result.stdout.strip()
-        message = result.stderr.strip() or 'Power profile command failed'
-        if (not any(pattern in message for pattern in RETRYABLE_ERRORS)
-                or time.monotonic() >= deadline):
-            raise RuntimeError(message)
-        time.sleep(1.0)
+            return
+        if time.monotonic() >= deadline:
+            raise RuntimeError(result.stderr.strip() or 'Power daemon did not become ready')
+        time.sleep(RETRY_SECONDS)
 
 
-def status(wait=0.0):
+def status():
     if not supported():
         raise RuntimeError('Unsupported machine, BIOS or platform driver')
-    active = daemon_profile(wait=wait)
-    # Informational only: this firmware's readback drifts between 'performance'
-    # and 'balanced-performance' for the same request, so it cannot decide the
-    # active policy. The policy is defined by the daemon profile plus the EPP
-    # values this helper writes.
-    platform = (SYS / 'firmware/acpi/platform_profile').read_text().strip()
-    preferences = sorted({p.read_text().strip() for p in policies()})
-    profile = ''
-    for candidate, preference in PREFERENCES.items():
-        expected_daemon = 'power-saver' if candidate == 'power-saver' else 'performance'
-        if active == expected_daemon and preferences == [preference]:
-            profile = candidate
-            break
-    return {'schemaVersion': 1, 'profile': profile,
-            'supportedProfiles': list(PREFERENCES), 'daemonProfile': active,
-            'platformProfile': platform, 'cpuPreferences': preferences}
+    try:
+        result = json.loads(run([POWERMODE, 'status', '--json'], timeout=15))
+    except json.JSONDecodeError as error:
+        raise RuntimeError(f'powermode returned invalid JSON: {error}') from None
+    if result.get('schemaVersion') != 1:
+        raise RuntimeError('powermode returned an unsupported schema version')
+    if not isinstance(result.get('supportedProfiles'), list) \
+            or not all(profile in result['supportedProfiles'] for profile in PROFILES):
+        raise RuntimeError('powermode did not report the three CPU profiles')
+    profile = result.get('profile') if result.get('profile') in PROFILES else ''
+    levels = result.get('gpuLevelNames')
+    if not isinstance(levels, list) or len(levels) != len(GPU_LEVELS):
+        raise RuntimeError('powermode did not report the four GPU levels')
+    return {
+        'schemaVersion': 1,
+        'profile': profile,
+        'supportedProfiles': list(PROFILES),
+        'daemonProfile': str(result.get('daemonProfile', '')),
+        'platformProfile': str(result.get('platformProfile', '')),
+        'cpuPreferences': [str(value) for value in result.get('cpuPreferences', [])],
+        'gpuLevel': int(result.get('gpuLevel', 0)),
+        'gpuLevelName': str(result.get('gpuLevelName', '')),
+        'gpuLevelNames': [str(name) for name in levels],
+        'gpuLock': str(result.get('gpuLock', '')),
+        'igpuCap': int(result.get('igpuCap', 0)),
+    }
+
+
+def require_root_and_hardware():
+    if os.geteuid() != 0:
+        raise PermissionError('Changing power policy requires root')
+    if not supported():
+        raise RuntimeError('Unsupported machine, BIOS or platform driver')
+
+
+def locked(action, wait=0.0):
+    """Serialize boot defaults and interactive changes; never use a caller path."""
+    try:
+        with open(LOCK_PATH, 'a', encoding='utf-8') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            daemon_ready(wait)
+            action()
+    except OSError as error:
+        raise RuntimeError(f'Unable to lock or apply power policy: {error}') from error
 
 
 def set_profile(profile, wait=0.0):
-    if profile not in PREFERENCES:
+    if profile not in PROFILES:
         raise ValueError('Unknown profile')
-    if os.geteuid() != 0:
-        raise PermissionError('Setting CPU preferences requires root')
-    if not supported():
-        raise RuntimeError('Unsupported machine, BIOS or platform driver')
-    paths = policies()
-    preference = PREFERENCES[profile]
-    for p in paths:
-        available = p.with_name('energy_performance_available_preferences').read_text().split()
-        if preference not in available:
-            raise RuntimeError(f'{p.parent.name} does not support {preference}')
-    previous_daemon = daemon_profile(wait=wait)
-    previous_preferences = {p: p.read_text().strip() for p in paths}
-    try:
-        # On this firmware, requesting balanced reads back platform performance.
-        daemon_profile('power-saver' if profile == 'power-saver' else 'balanced',
-                       wait=wait)
-        # Only a real daemon profile change makes the daemon re-apply its own
-        # CPU driver, so only then is a settle delay needed.
-        expected_daemon = 'power-saver' if profile == 'power-saver' else 'performance'
-        if previous_daemon != expected_daemon:
-            time.sleep(SETTLE_SECONDS)
-        for attempt in range(SETTLE_ATTEMPTS):
-            for p in paths:
-                p.write_text(preference + '\n')
-            result = status(wait=wait)
-            if result['profile'] == profile:
-                return result
-            if attempt + 1 < SETTLE_ATTEMPTS:
-                time.sleep(SETTLE_SECONDS)
-        raise RuntimeError('Requested policy did not match the actual CPU state')
-    except Exception as error:
-        rollback_errors = []
-        try:
-            daemon_profile('power-saver' if previous_daemon == 'power-saver' else 'balanced')
-        except Exception as rollback_error:
-            rollback_errors.append(str(rollback_error))
-        for p, value in previous_preferences.items():
-            try:
-                p.write_text(value + '\n')
-            except Exception as rollback_error:
-                rollback_errors.append(str(rollback_error))
-        if rollback_errors:
-            raise RuntimeError(f'{error}; rollback failed: {rollback_errors}') from error
-        raise
+    require_root_and_hardware()
+    locked(lambda: run([POWERMODE, profile]), wait)
+    return status()
+
+
+def set_gpu(level):
+    if level not in GPU_LEVELS:
+        raise ValueError('Unknown GPU level')
+    require_root_and_hardware()
+    locked(lambda: run([POWERMODE, 'gpu', level]))
+    return status()
 
 
 def wait_argument(args):
     if not args:
         return 0.0
     if len(args) > 1 or not args[0].startswith('--wait='):
-        raise ValueError('Usage: clavis-power-profile status | set PROFILE [--wait=SECONDS]')
+        raise ValueError('Usage: clavis-power-profile status | set PROFILE [--wait=SECONDS] | gpu LEVEL')
     try:
         wait = float(args[0][len('--wait='):])
     except ValueError:
@@ -158,16 +151,11 @@ def wait_argument(args):
 def main(args):
     if args == ['status']:
         return status()
-    if len(args) >= 2 and args[0] == 'set' and args[1] in PREFERENCES:
-        wait = wait_argument(args[2:])
-        # Serialize boot defaults and interactive changes. Never use a caller path.
-        try:
-            with open('/run/clavis-power-profile.lock', 'a', encoding='utf-8') as lock:
-                fcntl.flock(lock, fcntl.LOCK_EX)
-                return set_profile(args[1], wait)
-        except OSError as error:
-            raise RuntimeError(f'Unable to lock or apply CPU power policy: {error}') from error
-    raise ValueError('Usage: clavis-power-profile status | set PROFILE [--wait=SECONDS]')
+    if len(args) >= 2 and args[0] == 'set':
+        return set_profile(args[1], wait_argument(args[2:]))
+    if len(args) == 2 and args[0] == 'gpu':
+        return set_gpu(args[1])
+    raise ValueError('Usage: clavis-power-profile status | set PROFILE [--wait=SECONDS] | gpu LEVEL')
 
 
 if __name__ == '__main__':

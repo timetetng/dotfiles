@@ -25,6 +25,13 @@ Singleton {
     // It reads actual EPP values; platform_profile is informational because the
     // firmware readback drifts for identical requests.
     readonly property bool performanceViaBalanced: productName.text().trim() === "Redmi G 2022" && biosVersion.text().trim() === "RMGAD6T0P1313" && platformDriver.text().trim() === "bitland-mifs-wmi"
+    // GPU 频率档位由 powermode 定义；切换电源档时会套用该档预设，滑块可单独覆盖。
+    property int gpuLevel: 0
+    property var gpuLevelNames: []
+    property string gpuLock: ""
+    property int igpuCap: 0
+    readonly property bool gpuAvailable: performanceViaBalanced && gpuLevelNames.length === 4
+    readonly property string gpuLevelLabel: gpuAvailable && gpuLevel >= 0 && gpuLevel < gpuLevelNames.length ? gpuLevelNames[gpuLevel] : ""
 
     function labelForProfile(value) {
         switch (value) {
@@ -87,6 +94,17 @@ Singleton {
         applyProfile(value, false);
     }
 
+    // 只改 GPU 档位，不动 CPU 电源档；失败由 operationFailure 托住。
+    function setGpuLevel(level) {
+        if (!gpuAvailable || busy || level === gpuLevel)
+            return ;
+
+        operationFailure = "";
+        setProcess.command = ["/usr/bin/sudo", "-n", "/usr/local/libexec/clavis-power-profile", "gpu", String(level)];
+        setProcess.running = true;
+        commandTimeout.restart();
+    }
+
     // Re-applies the last known target even when the readback already shows it,
     // which is how a daemon/CPU mismatch gets repaired.
     function reapply() {
@@ -138,6 +156,12 @@ Singleton {
 
                     profiles = result.supportedProfiles;
                     root.daemonProfile = String(result.daemonProfile || "");
+                    root.gpuLevelNames = Array.isArray(result.gpuLevelNames) ? result.gpuLevelNames.map((name) => {
+                        return String(name);
+                    }) : [];
+                    root.gpuLevel = Number(result.gpuLevel) || 0;
+                    root.gpuLock = String(result.gpuLock || "");
+                    root.igpuCap = Number(result.igpuCap) || 0;
                     if (profiles.indexOf(result.profile) >= 0)
                         active = result.profile;
                     else
@@ -146,6 +170,9 @@ Singleton {
                     parseFailure = String(error);
                 }
             } else if (exitCode === 0) {
+                root.gpuLevelNames = [];
+                root.gpuLock = "";
+                root.igpuCap = 0;
                 for (const line of queryOutput.text.split("\n")) {
                     const match = line.match(/^\s*(\*)?\s*(power-saver|balanced|performance):/);
                     if (!match)

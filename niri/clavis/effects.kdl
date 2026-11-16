@@ -1,3 +1,13 @@
 // Managed by Clavis. Manual edits will be replaced.
 // X-Ray is niri's default for client-requested effects.
 // No rule override is required.
+
+// wlogout does not request ext-background-effect itself.
+layer-rule {
+    match namespace="^logout_dialog$"
+
+    background-effect {
+        xray true
+        blur true
+    }
+}

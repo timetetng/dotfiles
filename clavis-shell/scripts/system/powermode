@@ -1,0 +1,297 @@
+#!/usr/bin/env bash
+# powermode — 电源策略与 GPU 频率档位（Redmi G 2022 实测适配）
+#
+#   powermode saver | balanced | perf   切换 CPU/ACPI 电源档，并套用该档的 GPU 预设
+#   powermode gpu <省电|低|中|不限|0-3> 只改 GPU 频率档位（电源档不变）
+#   powermode status [--json]           查看状态；--json 给 clavis 消费
+#
+# 三档电源各自带一个 GPU 预设：省电→省电 GPU、均衡→中、性能→不限；之后仍可用
+# `powermode gpu` 单独覆盖。
+#
+# 为什么每次都先动 scaling_governor：intel_pstate 的 governor 一旦被钉在
+# performance，内核会锁死 EPP（只允许写 performance），切档必定 EBUSY 并整档
+# 回滚。governor 拉回 powersave 后 EPP 才可写；powersave 在负载下仍会睿频到最大。
+#
+# 为什么性能档的 platform_profile 写 balanced：这台机器的固件只接受 low-power 与
+# balanced，写 performance / balanced-performance 一律 ENODATA，而写 balanced 落到
+# 的正是固件里的性能态。因此 CPU 档位由 EPP 决定，platform_profile 仅作参考。
+set -euo pipefail
+
+# ---- 可调参数 ----
+# GPU 档位：名称 / dGPU 锁频（reset = 不限制）/ iGPU 上限（0 = RP0）
+GPU_NAMES=(省电 低 中 不限)
+GPU_DGPU=(405,600 405,1200 405,1800 reset)
+GPU_IGPU=(300 600 900 0)
+# ------------------
+
+die() { printf 'powermode: %s\n' "$*" >&2; exit 1; }
+read_it() { cat "$1" 2>/dev/null || printf '?'; }
+
+usage() {
+    cat <<'EOF'
+用法: powermode <saver|balanced|perf|gpu LEVEL|status [--json]>
+
+  saver      省电档：EPP=power、ACPI low-power，GPU 用「省电」预设
+  balanced   均衡档：EPP=balance_power、ACPI balanced，GPU 用「中」预设
+  perf       性能档：EPP=performance、ACPI 性能态，GPU 不限
+  gpu LEVEL  只改 GPU 档：0/省电 1/低 2/中 3/不限
+  status     显示状态；加 --json 输出机器可读结果
+EOF
+}
+
+find_igpu() {
+    local c drv
+    for c in /sys/class/drm/card[0-9]*; do
+        [ -e "$c/gt_max_freq_mhz" ] || continue
+        drv=$(basename "$(readlink -f "$c/device/driver" 2>/dev/null)")
+        [ "$drv" = i915 ] && { printf '%s' "$c"; return 0; }
+    done
+    return 1
+}
+
+has_nvidia() {
+    command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi -L >/dev/null 2>&1
+}
+
+# 汇总一类 sysfs 文件的取值；不一致时用 / 分隔
+agg() {
+    local f vals=()
+    shopt -s nullglob
+    for f in $1; do vals+=("$(cat "$f" 2>/dev/null)"); done
+    shopt -u nullglob
+    [ ${#vals[@]} -gt 0 ] || { printf 'n/a'; return; }
+    printf '%s\n' "${vals[@]}" | sort -u | paste -sd'/' -
+}
+
+# 以 root 执行 stdin 上的脚本；已是 root（开机单元 / clavis 助手）就不再套 sudo
+priv() {
+    if [ "$(id -u)" -eq 0 ]; then
+        bash -s -- "$@"
+    else
+        sudo bash -s -- "$@"
+    fi
+}
+
+priv_unlock_governor() {
+    priv <<'PRIV'
+set -euo pipefail
+changed=0
+for p in /sys/devices/system/cpu/cpufreq/policy*; do
+    [ -w "$p/scaling_governor" ] || continue
+    if [ "$(cat "$p/scaling_governor")" != powersave ]; then
+        printf 'powersave' > "$p/scaling_governor"
+        changed=$((changed + 1))
+    fi
+done
+if [ "$changed" -gt 0 ]; then
+    printf 'governor: %s 个 policy 已从 performance 拉回 powersave\n' "$changed"
+fi
+PRIV
+}
+
+# 写最终状态：EPP、ACPI platform_profile、iGPU 上限、dGPU 锁频
+#   $1 EPP（"-" 跳过）  $2 platform 首选（"-" 跳过）  $3 platform 兜底
+#   $4 iGPU 上限（0 = RP0）                        $5 dGPU 锁频（reset = 解除）
+priv_apply() {
+    priv "$IGPU" "$NV" "$@" <<'PRIV'
+set -euo pipefail
+igpu=$1; nv=$2; epp=$3; ppref=$4; pfall=$5; cap=$6; lock=$7
+
+if [ "$epp" != "-" ]; then
+    for f in /sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference; do
+        [ -w "$f" ] || continue
+        printf '%s' "$epp" > "$f" 2>/dev/null \
+            || printf 'powermode: 写 EPP 失败: %s\n' "$f" >&2
+    done
+fi
+
+pf=/sys/firmware/acpi/platform_profile
+if [ "$ppref" != "-" ] && [ -w "$pf" ] && [ "$(cat "$pf")" != "$ppref" ]; then
+    if ! printf '%s' "$ppref" > "$pf" 2>/dev/null; then
+        if printf '%s' "$pfall" > "$pf" 2>/dev/null; then
+            printf 'powermode: 固件不接受 platform_profile=%s，已退回 %s\n' "$ppref" "$pfall" >&2
+        else
+            printf 'powermode: platform_profile 写 %s/%s 均失败，保持 %s\n' \
+                "$ppref" "$pfall" "$(cat "$pf")" >&2
+        fi
+    fi
+fi
+
+if [ -n "$igpu" ]; then
+    rp0=$(cat "$igpu/gt_RP0_freq_mhz" 2>/dev/null || printf 0)
+    rpn=$(cat "$igpu/gt_RPn_freq_mhz" 2>/dev/null || printf 0)
+    if [ "$cap" = 0 ]; then cap=$rp0; fi
+    if [ "$cap" -gt "$rp0" ]; then cap=$rp0; fi
+    if [ -w "$igpu/gt_min_freq_mhz" ]; then
+        printf '%s' "$rpn" > "$igpu/gt_min_freq_mhz"
+    fi
+    printf '%s' "$cap" > "$igpu/gt_max_freq_mhz"
+    if [ -w "$igpu/gt_boost_freq_mhz" ]; then
+        printf '%s' "$cap" > "$igpu/gt_boost_freq_mhz"
+    fi
+fi
+
+if [ "$nv" = 1 ]; then
+    if [ "$lock" = reset ]; then
+        nvidia-smi -rgc >/dev/null 2>&1 \
+            || printf 'powermode: 解除 dGPU 锁频失败（可忽略）\n' >&2
+    else
+        nvidia-smi -lgc "$lock" >/dev/null 2>&1 \
+            || printf 'powermode: dGPU 锁频 %s 失败（驱动可能不支持 -lgc）\n' "$lock" >&2
+    fi
+fi
+PRIV
+}
+
+# ppd 只做尽力同步；失败不阻塞，以 sysfs 为唯一真相
+ppd_try() {
+    powerprofilesctl set "$1" 2>/dev/null && return 0
+    printf 'powermode: ppd 切 %s 失败（本机固件不接受该档），已跳过\n' "$1" >&2
+    return 0
+}
+
+settle() { sleep 0.5; }
+
+epp_now() { agg '/sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference'; }
+
+gpu_level_from_sys() {
+    local cur rp0 i cap
+    if [ -z "$IGPU" ]; then printf 3; return; fi
+    cur=$(read_it "$IGPU/gt_max_freq_mhz")
+    rp0=$(read_it "$IGPU/gt_RP0_freq_mhz")
+    for i in 0 1 2 3; do
+        cap=${GPU_IGPU[i]}
+        if [ "$cap" = 0 ]; then cap=$rp0; fi
+        if [ "$cur" = "$cap" ]; then printf '%s' "$i"; return; fi
+    done
+    printf 3
+}
+
+profile_from_epp() {
+    case "$(epp_now)" in
+        power) printf 'power-saver' ;;
+        balance_power | balance_performance | default) printf 'balanced' ;;
+        performance) printf 'performance' ;;
+        *) printf '' ;;
+    esac
+}
+
+# $1 档名  $2 EPP  $3 platform 首选  $4 platform 兜底  $5 GPU 档  $6 ppd 档
+apply_profile() {
+    local name=$1 epp=$2 pref=$3 fall=$4 gpu=$5 daemon=$6 cap lock
+    priv_unlock_governor
+    ppd_try "$daemon"
+    settle
+    cap=${GPU_IGPU[gpu]}
+    lock=${GPU_DGPU[gpu]}
+    priv_apply "$epp" "$pref" "$fall" "$cap" "$lock"
+    if [ "$(epp_now)" != "$epp" ]; then
+        printf 'powermode: EPP 被其他进程覆盖（%s），重写一次\n' "$(epp_now)" >&2
+        settle
+        priv_apply "$epp" "$pref" "$fall" "$cap" "$lock"
+    fi
+    printf '已切到%s档（EPP=%s，%s）\n' "$name" "$epp" "$(gpu_summary "$gpu")"
+}
+
+gpu_summary() {
+    local level=$1
+    if [ "${GPU_DGPU[level]}" = reset ]; then
+        printf 'GPU 档位：%s（不限制）' "${GPU_NAMES[level]}"
+    else
+        printf 'GPU 档位：%s（dGPU %s MHz，iGPU 上限 %s MHz）' \
+            "${GPU_NAMES[level]}" "${GPU_DGPU[level]}" "${GPU_IGPU[level]}"
+    fi
+}
+
+cmd_gpu() {
+    local arg=$1 level='' i
+    case "$arg" in
+        '' ) die '缺少 GPU 档位（0-3 或 省电/低/中/不限）' ;;
+        [0-3] ) level=$arg ;;
+        *)
+            for i in 0 1 2 3; do
+                if [ "${GPU_NAMES[i]}" = "$arg" ]; then level=$i; fi
+            done
+            [ -n "$level" ] || die "未知 GPU 档位: $arg"
+            ;;
+    esac
+    priv_apply - - - "${GPU_IGPU[level]}" "${GPU_DGPU[level]}"
+    printf '已切到 %s\n' "$(gpu_summary "$level")"
+}
+
+cmd_status() {
+    local json=$1 profile level daemon platform prefs cur
+    profile=$(profile_from_epp)
+    level=$(gpu_level_from_sys)
+    daemon=$(powerprofilesctl get 2>/dev/null || printf '?')
+    platform=$(read_it /sys/firmware/acpi/platform_profile)
+    prefs=$(epp_now)
+
+    if [ "$json" = 1 ]; then
+        local names='' dgpus='' igpus='' i sep=''
+        for i in 0 1 2 3; do
+            names+="$sep\"${GPU_NAMES[i]}\""
+            dgpus+="$sep\"${GPU_DGPU[i]}\""
+            igpus+="$sep${GPU_IGPU[i]}"
+            sep=','
+        done
+        printf '{"schemaVersion":1,"profile":"%s","supportedProfiles":["power-saver","balanced","performance"],"daemonProfile":"%s","platformProfile":"%s","cpuPreferences":["%s"],"gpuLevel":%s,"gpuLevelName":"%s","gpuLock":"%s","igpuCap":%s,"gpuLevelNames":[%s],"gpuLevelDgpu":[%s],"gpuLevelIgpu":[%s]}\n' \
+            "$profile" "$daemon" "$platform" "$prefs" "$level" \
+            "${GPU_NAMES[level]}" "${GPU_DGPU[level]}" \
+            "$(if [ "${GPU_IGPU[level]}" = 0 ]; then read_it "$IGPU/gt_RP0_freq_mhz"; else printf '%s' "${GPU_IGPU[level]}"; fi)" \
+            "$names" "$dgpus" "$igpus"
+        return 0
+    fi
+
+    local label
+    case "$profile" in
+        power-saver) label='省电档' ;;
+        balanced) label='均衡档' ;;
+        performance) label='性能档' ;;
+        *) label='未知' ;;
+    esac
+    printf '电源档       : %s\n' "$label"
+    printf '电源档(ppd)  : %s\n' "$daemon"
+    printf 'CPU governor : %s\n' "$(agg '/sys/devices/system/cpu/cpufreq/policy*/scaling_governor')"
+    printf 'CPU EPP      : %s\n' "$prefs"
+    printf 'ACPI 平台档  : %s（可写值受限）\n' "$platform"
+    printf '%s\n' "$(gpu_summary "$level")"
+    if [ -n "$IGPU" ]; then
+        printf 'iGPU 实际    : %s MHz（上限 %s，RP0 %s）\n' \
+            "$(read_it "$IGPU/gt_cur_freq_mhz")" \
+            "$(read_it "$IGPU/gt_max_freq_mhz")" \
+            "$(read_it "$IGPU/gt_RP0_freq_mhz")"
+    fi
+    if [ "$NV" = 1 ]; then
+        printf 'dGPU 实际    : %s\n' "$(nvidia-smi \
+            --query-gpu=clocks.gr,clocks.max.gr,utilization.gpu,temperature.gpu \
+            --format=csv,noheader,nounits 2>/dev/null \
+            | awk -F', *' '{printf "%s MHz（最大 %s，负载 %s%%，%s°C）", $1, $2, $3, $4}')"
+    fi
+    cur=$(read_it /sys/class/power_supply/BAT0/capacity)
+    printf '电池         : %s%% %s\n' "$cur" "$(read_it /sys/class/power_supply/BAT0/status)"
+}
+
+# ---- 入口 ----
+IGPU=$(find_igpu || true)
+if has_nvidia; then NV=1; else NV=0; fi
+[ -n "$IGPU" ] || [ "$NV" = 1 ] || die '既没找到 i915，也没找到可用的 NVIDIA 设备'
+
+case "${1:-}" in
+    saver | power-saver | 省电)
+        apply_profile '省电' power low-power low-power 0 power-saver ;;
+    balanced | 均衡)
+        apply_profile '均衡' balance_power balanced low-power 2 balanced ;;
+    perf | performance | 性能)
+        apply_profile '性能' performance balanced performance 3 balanced ;;
+    gpu)
+        cmd_gpu "${2:-}" ;;
+    status | st)
+        if [ "${2:-}" = '--json' ]; then cmd_status 1; else cmd_status 0; fi ;;
+    -h | --help | help)
+        usage ;;
+    '')
+        usage; exit 2 ;;
+    *)
+        printf '未知命令: %s\n\n' "$1" >&2; usage; exit 2 ;;
+esac

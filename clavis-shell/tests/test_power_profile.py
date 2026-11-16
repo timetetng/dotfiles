@@ -1,6 +1,7 @@
-"""Policy/readback and rollback tests using fake sysfs; never changes the host."""
+"""Contract tests for the Clavis power adapter; uses a fake powermode, never the host."""
 
 import importlib.util
+import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -14,159 +15,132 @@ power = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(power)
 
 
-class PowerProfileTests(unittest.TestCase):
+class PowerAdapterTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.sys = Path(self.directory.name)
-        self.patch = patch.object(power, 'SYS', self.sys)
-        self.patch.start()
-        self.addCleanup(self.patch.stop)
+        self.lock = self.sys / 'lock'
+        self.calls = []
+        self.payload = {
+            'schemaVersion': 1,
+            'profile': 'balanced',
+            'supportedProfiles': ['power-saver', 'balanced', 'performance'],
+            'daemonProfile': 'performance',
+            'platformProfile': 'performance',
+            'cpuPreferences': ['balance_power'],
+            'gpuLevel': 2,
+            'gpuLevelName': '中',
+            'gpuLock': '405,1800',
+            'igpuCap': 900,
+            'gpuLevelNames': ['省电', '低', '中', '不限'],
+        }
         for name, value in {
             'class/dmi/id/product_name': 'Redmi G 2022',
             'class/dmi/id/bios_version': 'RMGAD6T0P1313',
             'class/platform-profile/platform-profile-0/name': 'bitland-mifs-wmi',
-            'firmware/acpi/platform_profile': 'performance',
         }.items():
-            self.put(name, value)
-        for cpu in range(2):
-            base = f'devices/system/cpu/cpufreq/policy{cpu}/'
-            self.put(base + 'energy_performance_preference', 'performance')
-            self.put(base + 'energy_performance_available_preferences',
-                     'default performance balance_performance balance_power power')
-        self.daemon = 'performance'
+            path = self.sys / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(value + '\n')
+        for attribute, value in (('SYS', self.sys), ('LOCK_PATH', str(self.lock))):
+            patcher = patch.object(power, attribute, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        patcher = patch.object(power, 'run', side_effect=self.fake_run)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        patcher = patch.object(power.os, 'geteuid', return_value=0)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-    def put(self, name, value):
-        path = self.sys / name
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(value + '\n')
+    def fake_run(self, command, timeout=None):
+        self.calls.append([str(part) for part in command])
+        if [str(part) for part in command][1:] == ['status', '--json']:
+            return json.dumps(self.payload)
+        return ''
 
-    def daemon_profile(self, value=None, wait=0.0):
-        if value is not None:
-            if value not in ('balanced', 'power-saver'):
-                raise RuntimeError('Firmware rejects direct performance requests')
-            self.daemon = 'performance' if value == 'balanced' else value
-            self.put('firmware/acpi/platform_profile',
-                     'performance' if value == 'balanced' else 'low-power')
-        return self.daemon
+    def test_status_reports_three_profiles_and_four_gpu_levels(self):
+        result = power.status()
+        self.assertEqual(result['schemaVersion'], 1)
+        self.assertEqual(result['profile'], 'balanced')
+        self.assertEqual(result['gpuLevel'], 2)
+        self.assertEqual(result['gpuLevelNames'], ['省电', '低', '中', '不限'])
+        self.assertEqual(self.calls[-1][1:], ['status', '--json'])
 
-    def test_three_policies_round_trip(self):
-        with patch.object(power, 'daemon_profile', self.daemon_profile), \
-                patch.object(power.os, 'geteuid', return_value=0), \
-                patch.object(power.time, 'sleep'):
-            for profile in ('balanced', 'power-saver', 'performance', 'balanced'):
-                result = power.set_profile(profile)
-                self.assertEqual(result['profile'], profile)
-                self.assertEqual(result['cpuPreferences'], [power.PREFERENCES[profile]])
-                self.assertEqual(power.status()['profile'], profile)
+    def test_unclassified_epp_reports_empty_profile(self):
+        self.payload['profile'] = ''
+        self.assertEqual(power.status()['profile'], '')
 
-    def test_mixed_cpu_preferences_are_not_misreported(self):
-        power.policies()[0].write_text('balance_power\n')
-        with patch.object(power, 'daemon_profile', self.daemon_profile):
-            self.assertEqual(power.status()['profile'], '')
+    def test_missing_gpu_levels_are_rejected(self):
+        self.payload['gpuLevelNames'] = ['省电']
+        with self.assertRaisesRegex(RuntimeError, 'four GPU levels'):
+            power.status()
 
-    def test_platform_profile_drift_is_not_an_error(self):
-        # Firmware readback drifts between the two values for identical requests;
-        # only the daemon profile and EPP decide which policy is active.
-        for profile, platform in (('balanced', 'balanced-performance'),
-                                  ('performance', 'balanced-performance'),
-                                  ('performance', 'performance')):
-            self.put('firmware/acpi/platform_profile', platform)
-            for cpu in range(2):
-                self.put(f'devices/system/cpu/cpufreq/policy{cpu}/energy_performance_preference',
-                         power.PREFERENCES[profile])
-            with patch.object(power, 'daemon_profile', return_value='performance'):
-                result = power.status()
-            self.assertEqual(result['profile'], profile)
-            self.assertEqual(result['platformProfile'], platform)
+    def test_set_runs_the_matching_powermode_profile(self):
+        self.assertEqual(power.set_profile('power-saver')['profile'], 'balanced')
+        self.assertIn(['/usr/local/libexec/clavis-powermode', 'power-saver'], self.calls)
 
-    def test_readback_failure_restores_previous_policy(self):
-        before = {p: p.read_text() for p in power.policies()}
-        with patch.object(power, 'daemon_profile', self.daemon_profile), \
-                patch.object(power.os, 'geteuid', return_value=0), \
-                patch.object(power, 'status', side_effect=RuntimeError('readback failed')):
-            with self.assertRaisesRegex(RuntimeError, 'readback failed'):
-                power.set_profile('power-saver')
-        self.assertEqual(self.daemon, 'performance')
-        self.assertEqual({p: p.read_text() for p in power.policies()}, before)
+    def test_gpu_level_is_validated_before_running_anything(self):
+        power.set_gpu('1')
+        self.assertIn(['/usr/local/libexec/clavis-powermode', 'gpu', '1'], self.calls)
+        for value in ('4', '-1', '../etc/shadow', 'low'):
+            with self.assertRaises(ValueError):
+                power.set_gpu(value)
 
-    def test_unsupported_hardware_is_not_written(self):
-        self.put('class/dmi/id/product_name', 'Different model')
-        with patch.object(power.os, 'geteuid', return_value=0), \
-                patch.object(power, 'daemon_profile') as daemon:
-            with self.assertRaisesRegex(RuntimeError, 'Unsupported'):
-                power.set_profile('balanced')
-            daemon.assert_not_called()
-
-    def test_unknown_policy_is_rejected(self):
-        with self.assertRaisesRegex(ValueError, 'Unknown profile'):
+    def test_unknown_profile_and_extra_arguments_are_rejected(self):
+        with self.assertRaises(ValueError):
             power.set_profile('../../etc/shadow')
         with self.assertRaises(ValueError):
             power.main(['set', 'balanced', 'extra-argument'])
+        with self.assertRaises(ValueError):
+            power.main(['gpu'])
 
-    def test_daemon_not_ready_is_retried(self):
-        calls = []
+    def test_root_is_required_for_changes(self):
+        with patch.object(power.os, 'geteuid', return_value=1000):
+            with self.assertRaises(PermissionError):
+                power.set_profile('balanced')
+            with self.assertRaises(PermissionError):
+                power.set_gpu('3')
+        self.assertEqual(self.calls, [])
 
-        def run(args, **kwargs):
-            calls.append(args)
-            if len(calls) < 3:
-                return subprocess.CompletedProcess(
-                    args, 1, '',
-                    'Failed to communicate with power-profiles-daemon: no name owner')
-            return subprocess.CompletedProcess(args, 0, 'performance\n', '')
+    def test_unsupported_hardware_is_not_written(self):
+        (self.sys / 'class/dmi/id/product_name').write_text('Different model\n')
+        with self.assertRaisesRegex(RuntimeError, 'Unsupported'):
+            power.set_profile('balanced')
+        with self.assertRaisesRegex(RuntimeError, 'Unsupported'):
+            power.status()
+        self.assertEqual(self.calls, [])
 
-        with patch.object(power.subprocess, 'run', side_effect=run), \
+    def test_daemon_not_ready_is_retried_while_waiting(self):
+        attempts = []
+
+        def get(_command, **kwargs):
+            attempts.append(_command)
+            ready = len(attempts) >= 3
+            return subprocess.CompletedProcess(
+                _command, 0 if ready else 1, 'performance\n' if ready else '',
+                '' if ready else 'Failed to communicate with power-profiles-daemon')
+
+        with patch.object(power.subprocess, 'run', side_effect=get), \
                 patch.object(power.time, 'sleep'):
-            self.assertEqual(power.daemon_profile(wait=5), 'performance')
-        self.assertEqual(len(calls), 3)
+            power.set_profile('balanced', wait=5)
+        self.assertEqual(len(attempts), 3)
 
-    def test_transient_failure_without_wait_is_not_retried(self):
-        with patch.object(power.subprocess, 'run',
-                          return_value=subprocess.CompletedProcess(
-                              [], 1, '', 'Power profile command failed')) as run:
-            with self.assertRaisesRegex(RuntimeError, 'Power profile command failed'):
-                power.daemon_profile()
-            self.assertEqual(run.call_count, 1)
+    def test_daemon_failure_without_wait_is_not_retried(self):
+        failure = subprocess.CompletedProcess(
+            [], 1, '', 'Failed to communicate with power-profiles-daemon')
+        with patch.object(power.subprocess, 'run', return_value=failure), \
+                self.assertRaisesRegex(RuntimeError, 'Failed to communicate'):
+            power.set_profile('balanced')
+        self.assertEqual(self.calls, [])
 
     def test_wait_argument_is_validated(self):
         for argument in ('--wait=abc', '--wait=-1', '--wait=301', '--wait=5s', 'extra'):
             with self.assertRaises(ValueError):
-                power.main(['set', 'balanced', argument])
-
-    def test_daemon_reapply_after_write_is_corrected(self):
-        real_status = power.status
-        calls = []
-
-        def status_with_one_reapply(wait=0.0):
-            calls.append(wait)
-            if len(calls) == 1:
-                # ppd's own CPU driver lands after ours and resets EPP.
-                for p in power.policies():
-                    p.write_text('performance\n')
-            return real_status(wait=wait)
-
-        with patch.object(power, 'daemon_profile', self.daemon_profile), \
-                patch.object(power.os, 'geteuid', return_value=0), \
-                patch.object(power.time, 'sleep'), \
-                patch.object(power, 'status', status_with_one_reapply):
-            result = power.set_profile('balanced')
-        self.assertEqual(result['profile'], 'balanced')
-        self.assertEqual(len(calls), 2)
-        self.assertEqual({p.read_text() for p in power.policies()}, {'balance_power\n'})
-
-    def test_no_settle_delay_when_daemon_already_matches(self):
-        with patch.object(power, 'daemon_profile', self.daemon_profile), \
-                patch.object(power.os, 'geteuid', return_value=0), \
-                patch.object(power.time, 'sleep') as sleep:
-            power.set_profile('balanced')
-            sleep.assert_not_called()
-            power.set_profile('performance')
-            sleep.assert_not_called()
-
-    def test_set_requires_root(self):
-        with patch.object(power.os, 'geteuid', return_value=1000):
-            with self.assertRaises(PermissionError):
-                power.set_profile('balanced')
+                power.wait_argument([argument])
+        self.assertEqual(power.wait_argument([]), 0.0)
+        self.assertEqual(power.wait_argument(['--wait=45']), 45.0)
 
 
 if __name__ == '__main__':

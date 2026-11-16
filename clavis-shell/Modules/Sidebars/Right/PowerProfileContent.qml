@@ -88,6 +88,65 @@ WidgetPanel {
 
         }
 
+        SettingsSection {
+            Layout.fillWidth: true
+            visible: PowerProfileService.gpuAvailable
+            title: qsTr("GPU 频率档位")
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Metrics.spacingXS
+
+                Text {
+                    Layout.fillWidth: true
+                    text: qsTr("当前：") + (PowerProfileService.gpuLevelLabel.length > 0 ? PowerProfileService.gpuLevelLabel : qsTr("未知"))
+                    color: Appearance.colors.colOnSurface
+                    font.family: Fonts.ui
+                    font.pixelSize: Typography.bodyMedium.pixelSize
+                    font.weight: Font.Medium
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: PowerProfileService.gpuLock.length === 0 || PowerProfileService.gpuLock === "reset" ? qsTr("不限制 GPU 频率，性能最高、功耗最大") : qsTr("dGPU 锁 %1 MHz，iGPU 上限 %2 MHz").arg(PowerProfileService.gpuLock).arg(PowerProfileService.igpuCap)
+                    color: Appearance.colors.colOnSurfaceVariant
+                    font.family: Fonts.ui
+                    font.pixelSize: Typography.bodySmall.pixelSize
+                    wrapMode: Text.Wrap
+                }
+
+                MaterialSlider {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 64
+                    from: 0
+                    to: Math.max(0, PowerProfileService.gpuLevelNames.length - 1)
+                    stepSize: 1
+                    value: PowerProfileService.gpuLevel
+                    enabled: PowerProfileService.gpuAvailable && !PowerProfileService.busy
+                    accessibleName: qsTr("GPU 频率档位")
+                    valueFormatter: (sliderValue) => {
+                        const names = PowerProfileService.gpuLevelNames;
+                        const index = Math.round(sliderValue);
+                        return index >= 0 && index < names.length ? names[index] : "";
+                    }
+                    onCommitted: (sliderValue) => {
+                        PowerProfileService.setGpuLevel(Math.round(sliderValue));
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: qsTr("切换电源档会套用该档预设（省电→省电、均衡→中、性能→不限），拖动滑块可单独覆盖。")
+                    wrapMode: Text.Wrap
+                    color: Appearance.colors.colOnLayer1
+                    font.family: Fonts.ui
+                    font.pixelSize: 12
+                }
+
+            }
+
+        }
+
         Text {
             Layout.fillWidth: true
             text: PowerProfileService.performanceViaBalanced ? qsTr("开机默认均衡；保留睿频与性能上限，不修改自定义风扇曲线。") : qsTr("仅切换系统电源策略，不改变音量或自定义风扇曲线。")
