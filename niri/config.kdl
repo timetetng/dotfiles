@@ -173,8 +173,9 @@ layout {
     // `draw-border-with-background`.
 
     // You can change how the focus ring looks.
+    // 已启用：聚焦窗口画一圈渐变环。颜色来自 clavis/colors.kdl（Matugen 按壁纸生成）
+    // 的 active-gradient / urgent-color，这里只保留与颜色无关的几何参数。
     focus-ring {
-        off
 
         // How many logical pixels the ring extends out from the windows.
         width 4
@@ -254,17 +255,18 @@ layout {
         // pixels and match the CSS box-shadow properties.
 
         // Softness controls the shadow blur radius.
-        softness 35
+        softness 22
 
         // Spread expands the shadow.
-        spread 3
+        spread 0
 
         // Offset moves the shadow relative to the window.
-        offset x=0 y=8
+        offset x=0 y=6
 
-        // You can also change the shadow color and opacity.
-        color "#0007"
-        inactive-color "#0007"
+        // 阴影颜色由 Clavis 的 Matugen 模板写入 clavis/colors.kdl（随壁纸变化），
+        // 这里不再写死；阶梯：softness 22 / spread 0 / offset y=6。
+        // color "#0007"
+        // inactive-color "#0007"
     }
 
     // Struts shrink the area occupied by windows, similarly to layer-shell panels.
@@ -398,6 +400,7 @@ include optional=true "clavis/cursor.kdl"
 include optional=true "clavis/effects.kdl"
 // END CLAVIS EFFECTS
 
-// BEGIN CLAVIS HIGHLIGHT
-include optional=true "clavis/highlight.kdl"
-// END CLAVIS HIGHLIGHT
+// BEGIN CLAVIS COLORS
+// Matugen 按壁纸生成：focus-ring / recent-windows 配色（Clavis 所有，勿手改）
+include optional=true "clavis/colors.kdl"
+// END CLAVIS COLORS

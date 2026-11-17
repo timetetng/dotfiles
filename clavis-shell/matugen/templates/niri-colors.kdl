@@ -5,6 +5,18 @@ layout {
         active-gradient from="{{colors.primary.default.hex}}cc" to="{{colors.tertiary.default.hex}}cc" angle=135
         urgent-color "{{colors.error.default.hex}}"
     }
+
+    <* if {{ is_dark_mode }} *>
+    shadow {
+        color "{{colors.surface_container_lowest.default.hex}}55"
+        inactive-color "{{colors.surface_container_lowest.default.hex}}55"
+    }
+    <* else *>
+    shadow {
+        color "{{colors.on_surface.default.hex}}33"
+        inactive-color "{{colors.on_surface.default.hex}}33"
+    }
+    <* endif *>
 }
 
 recent-windows {

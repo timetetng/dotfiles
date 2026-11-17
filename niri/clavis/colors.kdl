@@ -5,6 +5,12 @@ layout {
         active-gradient from="#83d5c5cc" to="#abcae5cc" angle=135
         urgent-color "#ffb4ab"
     }
+
+    shadow {
+        color "#090f0e55"
+        inactive-color "#090f0e55"
+    }
+    
 }
 
 recent-windows {
