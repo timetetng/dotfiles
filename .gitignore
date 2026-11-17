@@ -65,3 +65,6 @@ theme/gtk-4.0/servers
 
 # 忽略 nvim 下 dsh 视觉路由的截图缓存（工具运行时自动生成）
 nvim/nvim/.dsh-vision-router/
+
+# Clavis/Matugen 运行期生成物（配色、指针、效果 fragment），由 Clavis 重写，不跟踪
+niri/clavis/
